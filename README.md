@@ -13,14 +13,19 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 
 El repositorio se divide para separar la funcionalidad técnica de la documentación general:
 
-- 📂 **[`Aplicacion-Parking/`](./Aplicacion-Parking/)**: Esta carpeta contiene el **núcleo de la aplicación**. Aquí encontrarás todos los scripts en Python (OpenCV, Tesseract), los ficheros de automatización Bash, y el código en C++ para subir a la placa Arduino. **Si quieres ver las instrucciones de uso, configuración o instalación técnica, por favor dirige tu atención al `README.md` que se encuentra dentro de ese directorio**.
+- 📂 **[`Aplicacion-Parking/`](./Aplicacion-Parking/)**: Esta carpeta contiene el **núcleo de la aplicación**. Aquí encontrarás todos los scripts en Python (OpenCV, Tesseract), los ficheros para la placa Arduino y utilidades en consola.
+- 📂 **[`Aplicacion-Web/`](./Aplicacion-Web/)**: Contiene la **interfaz de administración y la base de datos**. Almacena el servidor web (PHP, HTML, CSS) y el esquema relacional MySQL usado para gestionar eficientemente qué vehículos están autorizados.
+
+*(Nota: Tienes un `README.md` técnico específico dentro de cada una de estas carpetas detallando su instalación, cableado y requisitos.)*
 
 ## Tecnologías Principales y Disciplinas Aplicadas
 
 En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las siguientes ramas:
 * **Sistemas Operativos:** Uso de automatismos en Linux para la descarga y ejecución de dependencias (Arduino CLI).
 * **Fundamentos de Programación:** Desarrollo de la lógica central en Python y programación de hardware mediante código C++.
-* **Hardware y Redes:** Intercomunicación del puerto Serial, control de voltajes y señales I2C para el display lcd y la modulación de ancho de pulsos para controlar el servomotor.
+* **Hardware y Redes:** Intercomunicación del puerto Serial, control de voltajes y señales I2C para el display lcd y modulación de ancho de pulsos en el servomotor.
+* **Bases de Datos:** Almacenamiento y persistencia en un SGBD relacional (MySQL/MariaDB).
+* **Implantación de Aplicaciones Web:** Programación de interfaces y backend con PHP, HTML5 y CSS3.
 
 ---
 *Autor: Estudiante de ASIR.*
