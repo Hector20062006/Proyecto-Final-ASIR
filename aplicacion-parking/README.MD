@@ -5,7 +5,7 @@ Esta carpeta contiene el software y código necesario para que el sistema de con
 ## Componentes del Software
 
 1. **Software Central (Python):** 
-   - **`camara.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando \`pytesseract\`. Las matrículas se contrastan con las pre-autorizadas en memoria. Si es correcta, da la orden serial al Arduino.
+   - **`program.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando \`pytesseract\`. Las matrículas se contrastan con las pre-autorizadas en memoria. Si es correcta, da la orden serial al Arduino.
    - **`envia_hola.py`:** Es un script de simulación/test que permite introducir una matrícula desde la terminal en lugar de usar cámaras, ideal para hacer pruebas de hardware sin todo el sistema montado.
 
 2. **Código de Hardware (Arduino):**
