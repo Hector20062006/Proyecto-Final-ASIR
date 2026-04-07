@@ -13,7 +13,7 @@ ABIERTA = 20
 AUTORIZADAS = {
     "1234ABC",
     "5678DEF",
-    "GR1234AB",
+    "GR1234AA",
 }
 
 # Zona de lectura de cada cámara: (x, y, ancho, alto)
