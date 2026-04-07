@@ -1,6 +1,6 @@
 # Documentación Técnica: Aplicación de Parking
 
-Esta carpeta contiene el software y código necesario para que el sistema de control de barreras y reconocimiento de matrículas funcione físicamente.
+Esta carpeta contiene el software y código necesario para que el sistema de control de barreras y reconocimiento de matrículas funcione físicamente
 
 ## Componentes del Software
 
