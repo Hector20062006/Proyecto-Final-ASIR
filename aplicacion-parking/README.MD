@@ -1,41 +1,43 @@
-# Sistema de Control de Acceso con Reconocimiento de Matrículas (Proyecto Final ASIR)
+# Documentación Técnica: Aplicación de Parking
 
-## Descripción del Proyecto
-Este proyecto es un sistema de control de acceso automatizado para vehículos, desarrollado como Proyecto Final para el grado de Administración de Sistemas Informáticos en Red (ASIR). Combina visión por computadora (OpenCV y Tesseract OCR) con hardware libre (placa Arduino, servomotor y pantalla LCD I2C) para la gestión automática de un parking según las matrículas autorizadas detectadas.
+Esta carpeta contiene el software y código necesario para que el sistema de control de barreras y reconocimiento de matrículas funcione físicamente.
 
-## Componentes y Arquitectura
-
-El proyecto gira en torno a varias piezas principales de hardware y software interconectadas:
+## Componentes del Software
 
 1. **Software Central (Python):** 
-   - **`camara.py`:** Es el núcleo del proyecto. Se encarga de procesar la señal de vídeo simultánea de 2 cámaras a través de OpenCV, recortando la región de interés (ROI) y aislando la matrícula mediante procesamiento de imagen (escalado en escala de grises, desenfoque gaussiano, y binarización).
-   - A través de la librería `pytesseract` (Tesseract OCR), el software lee los caracteres.
-   - Las matrículas detectadas se comparan contra un diccionario en memoria de matrículas autorizadas (ej. *1234ABC*, *5678DEF*).
-   - Una vez comprobada la validez, da la orden mediante protocolo Serial al Arduino informando si se debe abrir o no la barrera.
-   - **`envia_hola.py`:** Es un script de control manual y testeo que permite introducir una matrícula por la terminal en lugar de usar la visión por ordenador, sirviendo para verificar la respuesta mecánica y electrónica del sistema.
+   - **`camara.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando \`pytesseract\`. Las matrículas se contrastan con las pre-autorizadas en memoria. Si es correcta, da la orden serial al Arduino.
+   - **`envia_hola.py`:** Es un script de simulación/test que permite introducir una matrícula desde la terminal en lugar de usar cámaras, ideal para hacer pruebas de hardware sin todo el sistema montado.
 
-2. **Electrónica (Arduino):**
-   - **`servo_and_lcd_serial.ino`:** Código fuente para la placa del microcontrolador.
-   - **Comunicador Serial:** Se queda en bucle de escucha del puerto serie ('/dev/ttyACM0') esperando órdenes de Python con el formato `angulo|linea1|linea2`.
-   - **Pantalla LCD 16x2 I2C (`LiquidCrystal_I2C`):** Informa al usuario visualmente del estado en dos líneas ("Bienvenido", "Comprobando", "Acceso Autorizado", "Acceso Denegado", etc).
-   - **Servomotor:** Conectado al PIN 9 del Arduino. Controla el acceso físico pivotando desde los grados de bloqueo (105º) hasta la apertura total (20º).
+2. **Código de Hardware (Arduino):**
+   - **`servo_and_lcd_serial/servo_and_lcd_serial.ino`:** Es el sketch C++ que se sube al microcontrolador. Escucha el puerto Serial ('/dev/ttyACM0') esperando órdenes de Python con un protocolo estricto: `angulo|linea1|linea2`.
+   - Controla el **Servomotor (PIN 9)** para abrir la barrera (ángulo 20º) o cerrarla (ángulo 105º).
+   - Muestra mensajes en la **Pantalla LCD I2C** ("Acceso autorizado", "Acceso denegado", etc).
 
-3. **Utilidades de Sistema (`arduino.sh`):** Un script bash preparado para automatizar la descarga e instalación de la versión de línea de comandos del entorno Arduino (`arduino-cli`), facilitando el despliegue del proyecto y la compilación/subida del código en infraestructuras headless (ej: Raspberry Pi / Linux).
+3. **Scripts de Instalación:** 
+   - **`arduino.sh`:** Automatiza la descarga y configuración de \`arduino-cli\` (la versión bash para entorno Linux), lo cual facilita compilar el código desde ordenadores sin entorno gráfico (servidores o placas embebidas).
 
-## Requisitos y Configuración del Entorno
+## Flujo de Trabajo
 
-### Dependencias Software
-- **Python 3:**
-  - `opencv-python` (`cv2`) para el manejo de cámaras e imágenes.
-  - `pytesseract` para extraer el texto de las matrículas leídas.
-  - `pyserial` para la comunicación del dispositivo con Python.
-- **Tesseract OCR:** Ha de estar instalado en el sistema local a nivel de binarios.
-- **Arduino IDE / Arduino CLI:** Necesario para flashear la placa. Las librerías de Arduino requeridas son `Wire.h`, `Servo` y `LiquidCrystal_I2C` (dirección habitual 0x27).
+1. Al arrancar `camara.py`, se conectará por puerto serie USB al Arduino y mantendrá un bucle de escaneo de los dispositivos de vídeo (cam0 y cam2).
+2. Si un coche llega, la cámara analiza los fotogramas, filtra ruido y lee sus letras de la matrícula (ej. `1234ABC`).
+3. **Paso Autorizado**: Si la matrícula está en la base (lista de admitidas), Python manda una cadena como `20|Acceso autorizado|Pase`. El Arduino mostrará los textos en el display y pondrá el servo en 20 grados, levantando la barrera.
+4. **Paso Denegado**: Si la matrícula no tiene permisos, se manda abrir con ángulo 105 (posición cerrada) con advertencias rojas y alertas, de forma que el coche se queda sin pasar.
+5. El sistema guarda *logs* de capturas debug (`guardar_debug()`) de todos los intentos, muy útil para ajustar las zonas de interés (ROI) y depurar falsas lecturas del OCR.
 
-### Funcionamiento Paso a Paso
+## Requisitos e Instalación
 
-1. Se ejecuta el software principal (`camara.py`) y este establece comunicación con el Arduino y comienza a leer las dos fuentes de vídeo.
-2. Tras aproximarse un coche, la cámara extrae el `frame` e intenta una validación del texto para asegurar que es un formato válido de matrícula (ej: 4 números y 3 letras).
-3. Si la matrícula es conocida, el Arduino recibe la petición de colocar el servomotor en posición 20 y muestra en la pantalla `Acceso autorizado` y `Puede pasar`.
-4. Si la matrícula no tiene permisos, se muestra en el LCD `Acceso denegado`, `Matrícula no válida` y el cierre lógico del servomotor se mantiene inviolable a 105º.
-5. Existe un guardado automático (`guardar_debug()`) en el interior de `camara.py` de imágenes y recortes cada vez que se detecta un coche, muy útil para fines de diagnóstico y auditoría.
+### Sistema Base
+- Python 3 instalado.
+- Motor Tesseract-OCR nativo instalado en el S.O.
+- Placa Arduino conectada por USB (o a nivel lógico) compatible operando a 9600 baudios.
+
+### Librerías Python a Instalar
+Debes instalar por pip los siguientes paquetes:
+```bash
+pip install opencv-python pytesseract pyserial
+```
+
+### Arduino y Wiring
+- Conecta el protocolo de datos I2C (SDA/SCL) del LCD de forma estándar.
+- Conecta la señal (amarillo/naranja) del Servomotor al **Pin 9** del Arduino.
+- Si subes el script a un Linux (`/dev/ttyACM0`) u otro SO asegúrate de que el puerto que usa `camara.py` coincide. En plataformas Windows deberás editar este dato a formato `COMX`.
