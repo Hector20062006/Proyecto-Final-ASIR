@@ -5,7 +5,7 @@ Esta carpeta contiene el software y código necesario para que el sistema de con
 ## Componentes del Software
 
 1. **Software Central (Python):** 
-   - **`program.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando \`pytesseract\`. Las matrículas se contrastan con las pre-autorizadas en memoria. Si es correcta, da la orden serial al Arduino.
+   - **`program.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando `pytesseract`. Las matrículas se consultan en tiempo real contra la base de datos MySQL. Si la matrícula existe, da la orden serial al Arduino para levantar la barrera.
    - **`envia_hola.py`:** Es un script de simulación/test que permite introducir una matrícula desde la terminal en lugar de usar cámaras, ideal para hacer pruebas de hardware sin todo el sistema montado.
 
 2. **Código de Hardware (Arduino):**
@@ -16,17 +16,30 @@ Esta carpeta contiene el software y código necesario para que el sistema de con
 3. **Scripts de Instalación:** 
    - **`arduino.sh`:** Automatiza la descarga y configuración de \`arduino-cli\` (la versión bash para entorno Linux), lo cual facilita compilar el código desde ordenadores sin entorno gráfico (servidores o placas embebidas).
 
-## Flujo de Trabajo
+## Flujo de Trabajo (Lógica del Programa)
 
-1. Al arrancar `camara.py`, se conectará por puerto serie USB al Arduino y mantendrá un bucle de escaneo de los dispositivos de vídeo (cam0 y cam2).
-2. Si un coche llega, la cámara analiza los fotogramas, filtra ruido y lee sus letras de la matrícula (ej. `1234ABC`).
-3. **Paso Autorizado**: Si la matrícula está en la base (lista de admitidas), Python manda una cadena como `20|Acceso autorizado|Pase`. El Arduino mostrará los textos en el display y pondrá el servo en 20 grados, levantando la barrera.
-4. **Paso Denegado**: Si la matrícula no tiene permisos, se manda abrir con ángulo 105 (posición cerrada) con advertencias rojas y alertas, de forma que el coche se queda sin pasar.
-5. El sistema guarda *logs* de capturas debug (`guardar_debug()`) de todos los intentos, muy útil para ajustar las zonas de interés (ROI) y depurar falsas lecturas del OCR.
+El archivo principal `program.py` sigue una secuencia lógica clara de 5 pasos para garantizar el control de acceso:
+
+1. **Conexión de Hardware**: Al arrancar, el script inicializa la comunicación por puerto serie (USB) con el Arduino y activa la captura de vídeo simultánea de las dos cámaras conectadas (`cam0` y `cam2`).
+2. **Procesamiento de Imagen**: Mantiene un bucle infinito que escanea los fotogramas. Cuando detecta movimiento, aplica filtros de contraste y recorta específicamente las zonas de interés (ROI) para aislar la placa de la matrícula.
+3. **Reconocimiento (OCR)**: La imagen recortada y filtrada se procesa con el motor `pytesseract`, que se encarga de extraer el texto limpio (letras y números) de la matrícula detectada.
+4. **Validación en Base de Datos**: La matrícula leída se consulta inmediatamente contra la base de datos MySQL del proyecto.
+5. **Acción Mecánica (Arduino)**: 
+   - **Paso Autorizado**: Si la matrícula está registrada en la tabla de vehículos, Python manda la instrucción `20|Acceso autorizado|Pase` por puerto serie. El Arduino mostrará los textos en el display LCD y pondrá el servomotor a 20 grados, levantando la barrera.
+   - **Paso Denegado**: Si la matrícula no existe en la base de datos, envía la orden para mantener el servo a 105 grados (posición cerrada) y muestra un mensaje de denegación en la pantalla.
+
+*(El sistema también guarda automáticamente capturas de imagen de todos los intentos mediante `guardar_debug()`, lo cual es muy útil para ajustar el enfoque de las cámaras).*
 
 ## Requisitos e Instalación
 
-### Sistema Base
+### 🐳 Despliegue en Contenedores (Docker)
+Este módulo se encuentra integrado en la arquitectura general del proyecto mediante Docker Compose. Al ejecutar `docker-compose up -d` desde la raíz del proyecto, el entorno de esta carpeta se despliega en el contenedor `api-python`.
+
+### 💻 Instalación Local (Para uso de Hardware y Cámaras)
+
+Para usar las cámaras físicas y la comunicación por puerto serie directamente desde tu PC, es necesario configurar el entorno local:
+
+#### Sistema Base
 - Python 3 instalado.
 - Motor Tesseract-OCR nativo instalado en el S.O.
 - Placa Arduino conectada por USB (o a nivel lógico) compatible operando a 9600 baudios.

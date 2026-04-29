@@ -1,8 +1,8 @@
 <?php
 // Datos de XAMPP
-$servidor = "localhost";
+$servidor = "db";
 $usuario = "root";
-$password = ""; 
+$password = "root"; 
 $base_datos = "parking_ASIR";
 
 $conexion = new mysqli($servidor, $usuario, $password, $base_datos);

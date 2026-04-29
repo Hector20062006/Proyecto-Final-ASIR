@@ -3,6 +3,7 @@ import pytesseract
 import serial
 import time
 import re
+import mysql.connector
 
 PUERTO = "/dev/ttyACM0"
 BAUDIOS = 9600
@@ -10,11 +11,13 @@ BAUDIOS = 9600
 CERRADA = 105
 ABIERTA = 20
 
-AUTORIZADAS = {
-    "1234ABC",
-    "5678DEF",
-    "GR1234AA",
-}
+def es_matricula_autorizada(matricula):
+    conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+    cursor = conn.cursor()
+    cursor.execute("SELECT matricula FROM vehiculos WHERE matricula = %s", (matricula,))
+    valida = cursor.fetchone() is not None
+    conn.close()
+    return valida
 
 # Zona de lectura de cada cámara: (x, y, ancho, alto)
 # AJUSTA ESTOS VALORES SEGÚN TU IMAGEN
@@ -161,7 +164,7 @@ def procesar_matricula(ser, matricula, origen):
 
     mostrar_espera(ser)
 
-    if matricula in AUTORIZADAS:
+    if es_matricula_autorizada(matricula):
         print("OK:", matricula, "autorizada")
         enviar(ser, CERRADA, "Matricula OK", matricula[:16])
         time.sleep(2)
@@ -174,9 +177,9 @@ def procesar_matricula(ser, matricula, origen):
 
 
 def guardar_debug(nombre, frame, recorte, procesada):
-    cv2.imwrite(f"/home/usuario/proyecto/{nombre}_frame.jpg", frame)
-    cv2.imwrite(f"/home/usuario/proyecto/{nombre}_roi.jpg", recorte)
-    cv2.imwrite(f"/home/usuario/proyecto/{nombre}_ocr.jpg", procesada)
+    cv2.imwrite(f"./{nombre}_frame.jpg", frame)
+    cv2.imwrite(f"./{nombre}_roi.jpg", recorte)
+    cv2.imwrite(f"./{nombre}_ocr.jpg", procesada)
 
 
 def main():

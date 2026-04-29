@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: parking_ASIR
+    volumes:
+      - ./parking_asir.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  web:
+    build: 
+      context: ./aplicacion-web
+      dockerfile: ../docker/web/Dockerfile
+    container_name: web_php
+    restart: always
+    volumes:
+      - ./aplicacion-web:/var/www/html
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+
+  python_app:
+    build: 
+      context: ./aplicacion-parking
+      dockerfile: ../docker/python/Dockerfile
+    container_name: python_app
+    restart: always
+    depends_on:
+      - db
+    # Mapeo de dispositivos de hardware para la Raspberry Pi
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"  # Arduino
+      - "/dev/video0:/dev/video0"    # Cámara 0
+      - "/dev/video2:/dev/video2"    # Cámara 2
+
+volumes:
+  db_data:

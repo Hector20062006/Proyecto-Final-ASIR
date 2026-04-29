@@ -26,6 +26,22 @@ En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las
 * **Hardware y Redes:** Intercomunicación del puerto Serial, control de voltajes y señales I2C para el display lcd y modulación de ancho de pulsos en el servomotor.
 * **Bases de Datos:** Almacenamiento y persistencia en un SGBD relacional (MySQL/MariaDB).
 * **Implantación de Aplicaciones Web:** Programación de interfaces y backend con PHP, HTML5 y CSS3.
+* **Despliegue con Contenedores:** Orquestación de servicios (Base de datos, API Python y Web PHP) mediante Docker y Docker Compose.
+
+## 🚀 Despliegue Rápido con Docker
+
+El proyecto ahora cuenta con una configuración completa mediante **Docker Compose**. Puedes levantar todo el entorno de desarrollo y pruebas con un solo comando:
+
+```bash
+docker-compose up -d --build
+```
+
+Esto levantará los siguientes servicios:
+1. **db**: Contenedor MySQL 8.0 con la base de datos `parking_ASIR`.
+2. **api-python**: Contenedor que servirá la lógica principal y conexión de la API en Python (Puerto 8000).
+3. **web**: Contenedor con el servidor web para la interfaz gráfica en PHP (Puerto 80).
+
+*(Puedes acceder a la aplicación web navegando a `http://localhost` en tu navegador).*
 
 ---
 *Autor: Estudiante de ASIR.*
