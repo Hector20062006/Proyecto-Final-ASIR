@@ -4,8 +4,8 @@ if (!isset($_SESSION['role']) || strtolower(trim($_SESSION['role'])) !== 'admini
     header("Location: ../login.php");
     exit;
 }
-require '../header2.php';
-require '../conexion.php';
+include '../header2.php';
+include '../conexion.php';
 ?>
 
 <div class="container">
@@ -46,4 +46,4 @@ require '../conexion.php';
     <a href="index.php"><button type="button" class="btn-gray">Volver al Inicio</button></a>
 </div>
 
-<?php require '../footer2.php'; ?>
+<?php include '../footer2.php'; ?>
