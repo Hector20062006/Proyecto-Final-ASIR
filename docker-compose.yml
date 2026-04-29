@@ -18,6 +18,7 @@ services:
     build: 
       context: ./aplicacion-web
       dockerfile: ../docker/web/Dockerfile
+    pull_policy: build
     container_name: web_php
     restart: always
     volumes:
@@ -31,6 +32,7 @@ services:
     build: 
       context: ./aplicacion-parking
       dockerfile: ../docker/python/Dockerfile
+    pull_policy: build
     container_name: python_app
     restart: always
     depends_on:
