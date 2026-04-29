@@ -33,7 +33,7 @@ El archivo principal `program.py` sigue una secuencia lógica clara de 5 pasos p
 ## Requisitos e Instalación
 
 ### 🐳 Despliegue en Contenedores (Docker)
-Este módulo se encuentra integrado en la arquitectura general del proyecto mediante Docker Compose. Al ejecutar `docker-compose up -d` desde la raíz del proyecto, el entorno de esta carpeta se despliega en el contenedor `api-python`.
+Este módulo se encuentra integrado en la arquitectura general del proyecto mediante Docker Compose. Al ejecutar `docker compose up -d` desde la raíz del proyecto, el entorno de esta carpeta se despliega en el contenedor `python_app`.
 
 ### 💻 Instalación Local (Para uso de Hardware y Cámaras)
 
@@ -47,10 +47,10 @@ Para usar las cámaras físicas y la comunicación por puerto serie directamente
 ### Librerías Python a Instalar
 Debes instalar por pip los siguientes paquetes:
 ```bash
-pip install opencv-python pytesseract pyserial
+pip install opencv-python pytesseract pyserial mysql-connector-python
 ```
 
 ### Arduino y Wiring
 - Conecta el protocolo de datos I2C (SDA/SCL) del LCD de forma estándar.
 - Conecta la señal (amarillo/naranja) del Servomotor al **Pin 9** del Arduino.
-- Si subes el script a un Linux (`/dev/ttyACM0`) u otro SO asegúrate de que el puerto que usa `camara.py` coincide. En plataformas Windows deberás editar este dato a formato `COMX`.
+- Si subes el script a un Linux (`/dev/ttyACM0`) u otro SO asegúrate de que el puerto que usa `program.py` coincide. En plataformas Windows deberás editar este dato a formato `COMX`.

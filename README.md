@@ -33,13 +33,13 @@ En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las
 El proyecto ahora cuenta con una configuración completa mediante **Docker Compose**. Puedes levantar todo el entorno de desarrollo y pruebas con un solo comando:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d
 ```
 
 Esto levantará los siguientes servicios:
 1. **db**: Contenedor MySQL 8.0 con la base de datos `parking_ASIR`.
-2. **api-python**: Contenedor que servirá la lógica principal y conexión de la API en Python (Puerto 8000).
-3. **web**: Contenedor con el servidor web para la interfaz gráfica en PHP (Puerto 80).
+2. **python_app**: Contenedor que ejecuta el procesamiento de imágenes (OpenCV + Tesseract) y se conecta directamente a la base de datos para la validación de matrículas.
+3. **web**: Contenedor con el servidor web para la interfaz gráfica de administración en PHP (Puerto 80).
 
 *(Puedes acceder a la aplicación web navegando a `http://localhost` en tu navegador).*
 
