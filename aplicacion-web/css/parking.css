@@ -240,3 +240,151 @@ footer {
         width: 30px; 
     }
 }
+
+/* =========================================
+   ESTILOS PARA FORMULARIOS Y FILTROS
+   ========================================= */
+.container-lg {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.filtro-form {
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--color-borde);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group-lg {
+    flex: 1;
+    min-width: 250px;
+}
+
+.form-group-md {
+    flex: 1;
+    min-width: 200px;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.form-control {
+    padding: 10px;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.form-control-mt10 {
+    padding: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-lg {
+    padding: 12px 20px;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.btn-w100 {
+    width: 100%;
+}
+
+.btn-grow {
+    flex-grow: 1;
+}
+
+.btn-blue {
+    background-color: var(--color-secundario);
+}
+.btn-blue:hover {
+    background-color: #2980b9;
+}
+
+.btn-red {
+    background-color: var(--color-peligro);
+}
+.btn-red:hover {
+    background-color: #c0392b;
+}
+
+.btn-green {
+    background-color: #27ae60;
+}
+.btn-green:hover {
+    background-color: #2ecc71;
+}
+
+.btn-gray {
+    background-color: #95a5a6;
+}
+.btn-gray:hover {
+    background-color: #7f8c8d;
+}
+
+.btn-gray-mt10 {
+    background-color: #95a5a6;
+    margin-top: 10px;
+}
+
+.link-grow {
+    flex-grow: 0.3;
+    display: flex;
+}
+
+/* =========================================
+   TABLAS Y ESTADOS (Historial Accesos)
+   ========================================= */
+.table-full {
+    width: 100%;
+}
+
+.estado-entrada {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.estado-salida {
+    color: var(--color-peligro);
+    font-weight: bold;
+}
+
+.estado-no-registrado {
+    color: #f39c12;
+}
+
+.alerta-vacia {
+    text-align: center;
+    padding: 40px;
+    background-color: #fce4e4;
+    border-radius: 8px;
+    border: 1px solid #f5c6cb;
+}
+
+.alerta-vacia-texto {
+    color: #c0392b;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0;
+}
+
+.hr-separador {
+    border: 0;
+    border-top: 1px solid var(--color-borde);
+    margin: 20px 0;
+}

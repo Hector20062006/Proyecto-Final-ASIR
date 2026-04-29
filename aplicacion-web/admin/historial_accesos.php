@@ -7,44 +7,82 @@ if (!isset($_SESSION['role']) || strtolower(trim($_SESSION['role'])) !== 'admini
 require '../header2.php'; 
 require '../conexion.php';
 
+// Recoger filtros si existen
 $filtro_usuario = isset($_GET['usuario']) ? trim($_GET['usuario']) : '';
+$fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
+$fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
 ?>
 
-<div class="container">
+<div class="container container-lg">
     <h2>Historial de Entradas y Salidas</h2>
-    <p>Registro de los movimientos del parking. Puedes filtrar para ver los fichajes de un usuario en específico.</p>
+    <p>Registro de los movimientos del parking. Aplica filtros para analizar periodos de tiempo concretos o usuarios específicos.</p>
 
-    <!-- Filtro sin JavaScript -->
-    <form method="GET" action="historial_accesos.php" style="margin-bottom: 20px; background-color: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
-        <label for="usuario" style="font-weight: bold;">Filtrar fichajes por Usuario:</label><br>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <select name="usuario" id="usuario" style="padding: 10px; flex-grow: 1;">
-                <option value="">-- Ver todos los usuarios --</option>
-                <?php
-                // Cargar la lista de usuarios para el filtro
-                $sql_usuarios = "SELECT u.dni, u.nombre, u.apellidos, r.nombre_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol ORDER BY u.nombre ASC";
-                $res_usuarios = mysqli_query($conexion, $sql_usuarios);
-                while ($u = mysqli_fetch_assoc($res_usuarios)) {
-                    $selected = ($filtro_usuario == $u['dni']) ? 'selected' : '';
-                    echo "<option value='{$u['dni']}' {$selected}>{$u['nombre']} {$u['apellidos']} (" . ucfirst($u['nombre_rol']) . ")</option>";
-                }
-                ?>
-            </select>
-            <button type="submit" style="padding: 10px 20px; background-color: #3498db;">🔍 Buscar</button>
-            <?php if ($filtro_usuario !== ''): ?>
-                <a href="historial_accesos.php"><button type="button" style="padding: 10px 20px; background-color: #e74c3c;">Limpiar Filtro</button></a>
+    <!-- Filtro Avanzado -->
+    <form method="GET" action="historial_accesos.php" class="filtro-form">
+        
+        <div class="form-row">
+            <div class="form-group-lg">
+                <label for="usuario" class="form-label">👤 Usuario:</label><br>
+                <select name="usuario" id="usuario" class="form-control">
+                    <option value="">-- Todos los usuarios --</option>
+                    <?php
+                    $sql_usuarios = "SELECT u.dni, u.nombre, u.apellidos, r.nombre_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol ORDER BY u.nombre ASC";
+                    $res_usuarios = mysqli_query($conexion, $sql_usuarios);
+                    while ($u = mysqli_fetch_assoc($res_usuarios)) {
+                        $selected = ($filtro_usuario == $u['dni']) ? 'selected' : '';
+                        echo "<option value='{$u['dni']}' {$selected}>{$u['nombre']} {$u['apellidos']} (" . ucfirst($u['nombre_rol']) . ")</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            
+            <div class="form-group-md">
+                <label for="fecha_inicio" class="form-label">📅 Desde (Fecha y Hora):</label><br>
+                <input type="datetime-local" name="fecha_inicio" id="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio); ?>" class="form-control">
+            </div>
+            
+            <div class="form-group-md">
+                <label for="fecha_fin" class="form-label">📅 Hasta (Fecha y Hora):</label><br>
+                <input type="datetime-local" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($fecha_fin); ?>" class="form-control">
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn-blue btn-lg btn-grow">🔍 Aplicar Filtros</button>
+            <?php if ($filtro_usuario !== '' || $fecha_inicio !== '' || $fecha_fin !== ''): ?>
+                <a href="historial_accesos.php" class="link-grow">
+                    <button type="button" class="btn-red btn-lg btn-w100">🗑️ Limpiar</button>
+                </a>
             <?php endif; ?>
         </div>
     </form>
 
     <?php
-    $where_clause = "";
+    $condiciones = [];
+
+    // Filtro por usuario
     if ($filtro_usuario !== '') {
-        // Aplicamos el filtro por el DNI seleccionado
-        $where_clause = " WHERE u.dni = '" . mysqli_real_escape_string($conexion, $filtro_usuario) . "' ";
+        $condiciones[] = "u.dni = '" . mysqli_real_escape_string($conexion, $filtro_usuario) . "'";
+    }
+    
+    // Filtro por fecha inicial (reemplazamos la 'T' de HTML5 por un espacio para MySQL)
+    if ($fecha_inicio !== '') {
+        $fecha_inicio_sql = str_replace('T', ' ', $fecha_inicio) . ':00';
+        $condiciones[] = "a.fecha_hora >= '" . mysqli_real_escape_string($conexion, $fecha_inicio_sql) . "'";
+    }
+    
+    // Filtro por fecha final
+    if ($fecha_fin !== '') {
+        $fecha_fin_sql = str_replace('T', ' ', $fecha_fin) . ':59';
+        $condiciones[] = "a.fecha_hora <= '" . mysqli_real_escape_string($conexion, $fecha_fin_sql) . "'";
     }
 
-    // Consulta con JOIN a roles para saber si es profesor o alumno
+    $where_clause = "";
+    if (count($condiciones) > 0) {
+        $where_clause = " WHERE " . implode(" AND ", $condiciones);
+    }
+
+    // Consulta principal
     $sql = "SELECT a.fecha_hora, a.tipo_movimiento, a.matricula, u.nombre, u.apellidos, r.nombre_rol 
             FROM accesos a
             LEFT JOIN vehiculos v ON a.matricula = v.matricula
@@ -57,7 +95,7 @@ $filtro_usuario = isset($_GET['usuario']) ? trim($_GET['usuario']) : '';
 
     if (mysqli_num_rows($resultado) > 0) {
         echo "<div class='tabla-responsive'>
-                <table>
+                <table class='table-full'>
                     <thead>
                         <tr>
                             <th>Fecha y Hora</th>
@@ -70,18 +108,16 @@ $filtro_usuario = isset($_GET['usuario']) ? trim($_GET['usuario']) : '';
                     <tbody>";
             
         while ($fila = mysqli_fetch_assoc($resultado)) {
-            // Colores para entrada/salida
-            $color_movimiento = ($fila['tipo_movimiento'] == 'ENTRADA') ? 'color: #27ae60; font-weight: bold;' : 'color: #c0392b; font-weight: bold;';
+            $clase_movimiento = ($fila['tipo_movimiento'] == 'ENTRADA') ? 'estado-entrada' : 'estado-salida';
             
-            $propietario = ($fila['nombre']) ? $fila['nombre'] . " " . $fila['apellidos'] : "<span style='color: #f39c12;'>No Registrado</span>";
+            $propietario = ($fila['nombre']) ? $fila['nombre'] . " " . $fila['apellidos'] : "<span class='estado-no-registrado'>No Registrado</span>";
             $rol = ($fila['nombre_rol']) ? ucfirst($fila['nombre_rol']) : "-";
 
-            // Formato de fecha
-            $fecha_formateada = date("d/m/Y H:i:s", strtotime($fila['fecha_hora']));
+            $fecha_formateada = date("d/m/Y - H:i", strtotime($fila['fecha_hora']));
 
             echo "<tr>
                     <td>{$fecha_formateada}</td>
-                    <td style='{$color_movimiento}'>{$fila['tipo_movimiento']}</td>
+                    <td class='{$clase_movimiento}'>{$fila['tipo_movimiento']}</td>
                     <td><strong>{$fila['matricula']}</strong></td>
                     <td>{$propietario}</td>
                     <td><strong>{$rol}</strong></td>
@@ -89,14 +125,16 @@ $filtro_usuario = isset($_GET['usuario']) ? trim($_GET['usuario']) : '';
         }
         echo "</tbody></table></div>";
     } else {
-        echo "<p style='text-align: center; font-weight: bold; padding: 20px;'>No hay registros de fichajes que coincidan con la búsqueda.</p>";
+        echo "<div class='alerta-vacia'>
+                <p class='alerta-vacia-texto'>No se encontraron accesos en ese periodo o con esos filtros.</p>
+              </div>";
     }
 
     mysqli_close($conexion);
     ?>
 
     <br>
-    <a href="index.php"><button type="button" style="background-color: #95a5a6;">Volver al Inicio</button></a>
+    <a href="index.php"><button type="button" class="btn-gray btn-gray-mt10">Volver al Inicio</button></a>
 </div>
 
 <?php require '../footer2.php'; ?>
