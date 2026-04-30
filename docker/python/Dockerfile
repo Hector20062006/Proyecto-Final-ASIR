@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Instalar dependencias de Python directamente
-RUN pip install --no-cache-dir opencv-python-headless==4.9.0.80 pytesseract==0.3.10 pyserial==3.5 mysql-connector-python==8.3.0
+RUN pip install --no-cache-dir "numpy<2" opencv-python-headless==4.9.0.80 pytesseract==0.3.10 pyserial==3.5 mysql-connector-python==8.3.0
 
 # Copiar el resto del código
 COPY . /app
