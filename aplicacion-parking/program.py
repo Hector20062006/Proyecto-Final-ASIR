@@ -20,9 +20,9 @@ def es_matricula_autorizada(matricula):
     return valida
 
 # Zona de lectura de cada cámara: (x, y, ancho, alto)
-# AJUSTA ESTOS VALORES SEGÚN TU IMAGEN
-ROI_CAM0 = (180, 180, 280, 120)
-ROI_CAM2 = (180, 180, 280, 120)
+# Valores ajustados para mayor rango en resolución 1080p
+ROI_CAM0 = (300, 300, 1320, 600)
+ROI_CAM2 = (300, 300, 1320, 600)
 
 ULTIMA_MATRICULA = None
 ULTIMO_TIEMPO = 0
@@ -100,8 +100,8 @@ def configurar_camara(indice):
     if not cap.isOpened():
         return None
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     cap.set(cv2.CAP_PROP_FPS, 5)
 
     try:
