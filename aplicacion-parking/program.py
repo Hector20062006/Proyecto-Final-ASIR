@@ -66,7 +66,7 @@ def abrir_barrera(ser):
     enviar(ser, CERRADA, "Cerrando", "Espere")
     time.sleep(2)
 
-    enviar(ser, CERRADA, "Parking", "Cerrado")
+    enviar(ser, CERRADA, "Esperando", "vehiculo")
     time.sleep(1)
 
 
@@ -77,7 +77,7 @@ def denegar_paso(ser):
     enviar(ser, CERRADA, "Matricula", "no valida")
     time.sleep(2)
 
-    enviar(ser, CERRADA, "Parking", "Cerrado")
+    enviar(ser, CERRADA, "Esperando", "vehiculo")
     time.sleep(1)
 
 
@@ -186,7 +186,7 @@ def main():
     ser = serial.Serial(PUERTO, BAUDIOS, timeout=1)
     time.sleep(2.5)
 
-    enviar(ser, CERRADA, "Parking", "Cerrado")
+    enviar(ser, CERRADA, "Esperando", "vehiculo")
     time.sleep(1)
 
     cam0 = configurar_camara(0)
