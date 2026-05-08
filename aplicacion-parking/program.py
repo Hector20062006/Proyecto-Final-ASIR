@@ -1,5 +1,5 @@
 import cv2
-import pytesseract
+import easyocr
 import serial
 import time
 import re
@@ -15,6 +15,12 @@ BAUDIOS = 9600
 
 CERRADA = 105
 ABIERTA = 20
+
+# Inicializar EasyOCR (usará CPU en la Raspberry Pi)
+# Esto carga el modelo en memoria, por lo que tardará unos segundos al arrancar
+log_mensaje("Sistema", "Inicializando Motor de IA (EasyOCR)...")
+lector = easyocr.Reader(['es'], gpu=False)
+log_mensaje("Sistema", "Motor de IA listo.")
 
 def es_matricula_autorizada(matricula):
     try:
@@ -174,15 +180,17 @@ def leer_matricula_desde_roi(frame, roi):
     recorte = recortar_roi(frame, roi)
     procesada = preparar_imagen_para_ocr(recorte)
 
-    # Las matrículas españolas modernas NO tienen vocales ni la Ñ ni la Q.
-    # Restringir la lista de caracteres hace que Tesseract falle mucho menos.
-    texto = pytesseract.image_to_string(
-        procesada,
-        config="--psm 7 -c tessedit_char_whitelist=0123456789BCDFGHJKLMNPRSTVWXYZ"
-    )
+    # EasyOCR devuelve una lista de tuplas: (caja, texto, confianza)
+    # Ejemplo: [([[10, 10], [100, 10], [100, 40], [10, 40]], '1234 BCD', 0.89)]
+    resultados = lector.readtext(procesada)
+    
+    texto_detectado = ""
+    for (bbox, texto, confianza) in resultados:
+        texto_limpio = limpiar_texto(texto)
+        if len(texto_limpio) > 3: # Ignorar ruido de 1 o 2 letras
+            texto_detectado += texto_limpio
 
-    texto = limpiar_texto(texto)
-    return texto, recorte, procesada
+    return texto_detectado, recorte, procesada
 
 
 def debe_ignorar_matricula(matricula):
