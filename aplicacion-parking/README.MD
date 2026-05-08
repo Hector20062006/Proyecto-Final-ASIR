@@ -1,56 +1,52 @@
-# Documentación Técnica: Aplicación de Parking
+# Documentación Técnica: Aplicación de Parking (Reconocimiento de Matrículas)
 
-Esta carpeta contiene el software y código necesario para que el sistema de control de barreras y reconocimiento de matrículas funcione físicamente.
+Esta carpeta contiene el cerebro del sistema de control de barreras. Aquí se aloja el software escrito en Python (`program.py`) que gestiona las cámaras, la Inteligencia Artificial (OCR) y la comunicación con el hardware.
 
-## Componentes del Software
+## 🧠 El Archivo Principal: `program.py`
 
-1. **Software Central (Python):** 
-   - **`program.py`:** Es el archivo principal. Se encarga de capturar el vídeo simultáneo de 2 cámaras a través de OpenCV, detectar y recortar la región de las matrículas y preparar las imágenes para leer el texto usando `pytesseract`. Las matrículas se consultan en tiempo real contra la base de datos MySQL. Si la matrícula existe, da la orden serial al Arduino para levantar la barrera.
-   - **`envia_hola.py`:** Es un script de simulación/test que permite introducir una matrícula desde la terminal en lugar de usar cámaras, ideal para hacer pruebas de hardware sin todo el sistema montado.
+El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma continua (bucle infinito) analizando vídeo en tiempo real. Recientemente ha sido mejorado para ser altamente resistente a fallos en entornos Docker y Raspberry Pi.
 
-2. **Código de Hardware (Arduino):**
-   - **`servo_and_lcd_serial/servo_and_lcd_serial.ino`:** Es el sketch C++ que se sube al microcontrolador. Escucha el puerto Serial ('/dev/ttyACM0') esperando órdenes de Python con un protocolo estricto: `angulo|linea1|linea2`.
-   - Controla el **Servomotor (PIN 9)** para abrir la barrera (ángulo 20º) o cerrarla (ángulo 105º).
-   - Muestra mensajes en la **Pantalla LCD I2C** ("Acceso autorizado", "Acceso denegado", etc).
+### Funcionalidades Clave de `program.py`:
 
-3. **Scripts de Instalación:** 
-   - **`arduino.sh`:** Automatiza la descarga y configuración de \`arduino-cli\` (la versión bash para entorno Linux), lo cual facilita compilar el código desde ordenadores sin entorno gráfico (servidores o placas embebidas).
+1. **Gestión de Hardware Seguro:**
+   - Se conecta al Arduino por puerto Serie (`/dev/ttyACM0` a 9600 baudios).
+   - Inicia la captura de dos cámaras simultáneas de forma dinámica. Si una cámara falla o se desconecta, el sistema genera un log crítico sin romper el resto de los servicios.
 
-## Flujo de Trabajo (Lógica del Programa)
+2. **Preprocesado de Imagen Avanzado (OpenCV):**
+   - Para que la lectura de matrículas no falle por culpa del sol o las sombras, el código recorta un área de interés (`ROI`) e invoca la función `preparar_imagen_para_ocr()`.
+   - **CLAHE:** Ecualiza la iluminación de la imagen en tiempo real.
+   - **Filtro de Otsu:** Calcula matemáticamente el punto perfecto para convertir la foto a blanco y negro puro, independientemente de la luz exterior.
+   - **Operaciones Morfológicas:** Cierra pequeños "agujeros" en las letras y elimina puntitos de ruido para que la imagen quede perfecta.
 
-El archivo principal `program.py` sigue una secuencia lógica clara de 5 pasos para garantizar el control de acceso:
+3. **Inteligencia Artificial (Tesseract OCR):**
+   - Utiliza `pytesseract` para extraer el texto.
+   - **Whitelist estricta:** Se le ha configurado una lista blanca (`0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`) para evitar que lea símbolos raros en la carretera o en la chapa del coche.
 
-1. **Conexión de Hardware**: Al arrancar, el script inicializa la comunicación por puerto serie (USB) con el Arduino y activa la captura de vídeo simultánea de las dos cámaras conectadas (`cam0` y `cam2`).
-2. **Procesamiento de Imagen**: Mantiene un bucle infinito que escanea los fotogramas. Cuando detecta movimiento, aplica filtros de contraste y recorta específicamente las zonas de interés (ROI) para aislar la placa de la matrícula.
-3. **Reconocimiento (OCR)**: La imagen recortada y filtrada se procesa con el motor `pytesseract`, que se encarga de extraer el texto limpio (letras y números) de la matrícula detectada.
-4. **Validación en Base de Datos**: La matrícula leída se consulta inmediatamente contra la base de datos MySQL del proyecto.
-5. **Acción Mecánica (Arduino)**: 
-   - **Paso Autorizado**: Si la matrícula está registrada en la tabla de vehículos, Python manda la instrucción `20|Acceso autorizado|Pase` por puerto serie. El Arduino mostrará los textos en el display LCD y pondrá el servomotor a 20 grados, levantando la barrera.
-   - **Paso Denegado**: Si la matrícula no existe en la base de datos, envía la orden para mantener el servo a 105 grados (posición cerrada) y muestra un mensaje de denegación en la pantalla.
+4. **Conexión Directa a Base de Datos MySQL:**
+   - **Validación:** Consulta si la matrícula detectada existe en la tabla `vehiculos` (`es_matricula_autorizada()`). Está protegido con un bloque `try/except` para no colgarse si la base de datos pierde conexión.
+   - **Historial (NUEVO):** Automáticamente registra el acceso en la tabla `accesos`, guardando la matrícula, la hora exacta y si fue una "ENTRADA" (Cámara 0) o "SALIDA" (Cámara 2) mediante la función `registrar_acceso()`.
 
-*(El sistema también guarda automáticamente capturas de imagen de todos los intentos mediante `guardar_debug()`, lo cual es muy útil para ajustar el enfoque de las cámaras).*
+5. **Sistema de Logs para Docker:**
+   - Todo se registra mediante una función propia `log_mensaje()`. 
+   - Esta función añade la fecha y hora exactas y fuerza el volcado en pantalla (`flush=True`), lo que permite monitorear todo en tiempo real usando `docker logs -f python_app`.
 
-## Requisitos e Instalación
+## Componentes Secundarios
 
-### 🐳 Despliegue en Contenedores (Docker)
-Este módulo se encuentra integrado en la arquitectura general del proyecto mediante Docker Compose. Al ejecutar `docker compose up -d` desde la raíz del proyecto, el entorno de esta carpeta se despliega en el contenedor `python_app`.
+- **`arduino.sh`:** Script para instalar y configurar `arduino-cli` en entornos Linux sin interfaz gráfica.
+- **Códigos de Arduino (Carpetas `servo_serial`, etc):** Contienen el firmware en C++ que se sube al microcontrolador. Escuchan por el puerto serie y mueven el servomotor (Pin 9) a la vez que actualizan la pantalla LCD.
 
-### 💻 Instalación Local (Para uso de Hardware y Cámaras)
+## Instrucciones de Instalación y Despliegue
 
-Para usar las cámaras físicas y la comunicación por puerto serie directamente desde tu PC, es necesario configurar el entorno local:
+### 🐳 Despliegue en Raspberry Pi (Docker)
+Este es el método recomendado. El código está preparado para ejecutarse dentro del servicio `python_app` del archivo `docker-compose.yml`.
+- Requiere ejecutar el contenedor en modo privilegiado (`privileged: true`) y mapear correctamente los dispositivos de hardware (`/dev/videoX`).
+- Si modificas el área de captura (ROI) en el código, simplemente reinicia el contenedor con `docker-compose restart python_app`.
 
-#### Sistema Base
-- Python 3 instalado.
-- Motor Tesseract-OCR nativo instalado en el S.O.
-- Placa Arduino conectada por USB (o a nivel lógico) compatible operando a 9600 baudios.
-
-### Librerías Python a Instalar
-Debes instalar por pip los siguientes paquetes:
-```bash
-pip install opencv-python pytesseract pyserial mysql-connector-python
-```
-
-### Arduino y Wiring
-- Conecta el protocolo de datos I2C (SDA/SCL) del LCD de forma estándar.
-- Conecta la señal (amarillo/naranja) del Servomotor al **Pin 9** del Arduino.
-- Si subes el script a un Linux (`/dev/ttyACM0`) u otro SO asegúrate de que el puerto que usa `program.py` coincide. En plataformas Windows deberás editar este dato a formato `COMX`.
+### 💻 Pruebas Locales (Windows/Linux)
+Si quieres probar el script `program.py` en tu ordenador sin usar Docker:
+1. Instala Python 3 y Tesseract OCR en tu sistema.
+2. Instala las librerías necesarias:
+   ```bash
+   pip install opencv-python pytesseract pyserial mysql-connector-python
+   ```
+3. Ejecuta el script: `python program.py`. *(Nota: En Windows, deberás cambiar la variable PUERTO de `/dev/ttyACM0` a tu puerto correspondiente, ej. `COM3`).*
