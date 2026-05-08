@@ -4,6 +4,11 @@ import serial
 import time
 import re
 import mysql.connector
+import datetime
+
+def log_mensaje(origen, mensaje):
+    ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{ahora}] [{origen}] {mensaje}", flush=True)
 
 PUERTO = "/dev/ttyACM0"
 BAUDIOS = 9600
@@ -12,12 +17,29 @@ CERRADA = 105
 ABIERTA = 20
 
 def es_matricula_autorizada(matricula):
-    conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
-    cursor = conn.cursor()
-    cursor.execute("SELECT matricula FROM vehiculos WHERE matricula = %s", (matricula,))
-    valida = cursor.fetchone() is not None
-    conn.close()
-    return valida
+    try:
+        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        cursor = conn.cursor()
+        cursor.execute("SELECT matricula FROM vehiculos WHERE matricula = %s", (matricula,))
+        valida = cursor.fetchone() is not None
+        conn.close()
+        return valida
+    except mysql.connector.Error as err:
+        log_mensaje("Base de Datos", f"Error al validar matrícula: {err}")
+        return False
+
+def registrar_acceso(matricula, origen):
+    try:
+        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        cursor = conn.cursor()
+        # Si viene de la Cámara 0 es ENTRADA, si es la 2 es SALIDA
+        movimiento = "ENTRADA" if "0" in origen else "SALIDA"
+        cursor.execute("INSERT INTO accesos (matricula, tipo_movimiento) VALUES (%s, %s)", (matricula, movimiento))
+        conn.commit()
+        conn.close()
+        log_mensaje("Base de Datos", f"Acceso registrado: {matricula} - {movimiento}")
+    except mysql.connector.Error as err:
+        log_mensaje("Base de Datos", f"Error al registrar acceso: {err}")
 
 # Zona de lectura de cada cámara: (x, y, ancho, alto)
 # Valores ajustados para mayor rango en resolución 1080p
@@ -160,17 +182,18 @@ def procesar_matricula(ser, matricula, origen):
     if debe_ignorar_matricula(matricula):
         return
 
-    print(f"{origen} -> Matrícula detectada: {matricula}")
+    log_mensaje(origen, f"¡MATRÍCULA DETECTADA!: {matricula}")
 
     mostrar_espera(ser)
 
     if es_matricula_autorizada(matricula):
-        print("OK:", matricula, "autorizada")
+        log_mensaje("Autorización", f"OK - La matrícula {matricula} está AUTORIZADA.")
         enviar(ser, CERRADA, "Matricula OK", matricula[:16])
+        registrar_acceso(matricula, origen)
         time.sleep(2)
         abrir_barrera(ser)
     else:
-        print("NO:", matricula, "no autorizada")
+        log_mensaje("Autorización", f"DENEGADO - La matrícula {matricula} NO está autorizada.")
         enviar(ser, CERRADA, "Matricula NO", matricula[:16])
         time.sleep(2)
         denegar_paso(ser)
@@ -193,12 +216,12 @@ def main():
     cam2 = configurar_camara(2)
 
     if cam0 is None:
-        print("No se pudo abrir la cámara 0")
+        log_mensaje("Cámara 0", "CRÍTICO - No se pudo abrir la cámara de Entrada (0)")
         ser.close()
         return
 
     if cam2 is None:
-        print("No se pudo abrir la cámara 2")
+        log_mensaje("Cámara 2", "CRÍTICO - No se pudo abrir la cámara de Salida (2)")
         cam0.release()
         ser.close()
         return
@@ -217,10 +240,9 @@ def main():
                 guardar_debug("cam0", frame0, recorte0, proc0)
                 procesar_matricula(ser, normalizar_matricula(texto0), "Cámara 0")
             elif texto0:
-                print(f"Cámara 0 -> Texto detectado: {texto0}")
-
+                log_mensaje("Cámara 0", f"Texto ilegible o no es matrícula: '{texto0}'")
         else:
-            print("Cámara 0 -> Error Comprobando frame")
+            log_mensaje("Cámara 0", "Error obteniendo imagen (Frame vacío)")
 
         ok2, frame2 = cam2.read()
         if ok2:
@@ -229,10 +251,9 @@ def main():
                 guardar_debug("cam2", frame2, recorte2, proc2)
                 procesar_matricula(ser, normalizar_matricula(texto2), "Cámara 2")
             elif texto2:
-                print(f"Cámara 2 -> Texto detectado: {texto2}")
-
+                log_mensaje("Cámara 2", f"Texto ilegible o no es matrícula: '{texto2}'")
         else:
-            print("Cámara 2 -> Error Comprobando frame")
+            log_mensaje("Cámara 2", "Error obteniendo imagen (Frame vacío)")
 
         time.sleep(1)
 
