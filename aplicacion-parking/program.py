@@ -113,7 +113,9 @@ def limpiar_texto(texto):
 
 
 def es_matricula_valida(texto):
-    return re.fullmatch(r"\d{4}[A-Z]{3}", texto) is not None
+    # En España, las matrículas modernas tienen 4 números y 3 consonantes
+    # Ejemplo: 1234BCD
+    return re.fullmatch(r"\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}", texto) is not None
 
 
 def configurar_camara(indice):
@@ -145,20 +147,38 @@ def recortar_roi(frame, roi):
 
 
 def preparar_imagen_para_ocr(roi):
+    # 1. Convertir a escala de grises
     gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    gris = cv2.GaussianBlur(gris, (3, 3), 0)
-    gris = cv2.resize(gris, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    _, binaria = cv2.threshold(gris, 140, 255, cv2.THRESH_BINARY)
-    return binaria
+    
+    # 2. Mejorar el contraste automáticamente (CLAHE)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    gris = clahe.apply(gris)
+    
+    # 3. Desenfoque ligero para eliminar ruido
+    gris = cv2.GaussianBlur(gris, (5, 5), 0)
+    
+    # 4. Binarización con el método de Otsu (calcula el umbral ideal automáticamente)
+    _, binaria = cv2.threshold(gris, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    
+    # 5. Operaciones morfológicas para rellenar huecos en las letras y limpiar puntitos
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    binaria = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel, iterations=1)
+    
+    # 6. Ampliar la imagen para que Tesseract lea mejor
+    procesada = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    
+    return procesada
 
 
 def leer_matricula_desde_roi(frame, roi):
     recorte = recortar_roi(frame, roi)
     procesada = preparar_imagen_para_ocr(recorte)
 
+    # Las matrículas españolas modernas NO tienen vocales ni la Ñ ni la Q.
+    # Restringir la lista de caracteres hace que Tesseract falle mucho menos.
     texto = pytesseract.image_to_string(
         procesada,
-        config="--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        config="--psm 7 -c tessedit_char_whitelist=0123456789BCDFGHJKLMNPRSTVWXYZ"
     )
 
     texto = limpiar_texto(texto)
