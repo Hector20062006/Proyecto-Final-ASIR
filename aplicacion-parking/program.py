@@ -119,9 +119,8 @@ def limpiar_texto(texto):
 
 
 def es_matricula_valida(texto):
-    # En España, las matrículas modernas tienen 4 números y 3 consonantes
-    # Ejemplo: 1234BCD
-    return re.fullmatch(r"\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}", texto) is not None
+    # Permitir cualquier letra de la A a la Z (incluyendo vocales para las pruebas del usuario)
+    return re.fullmatch(r"\d{4}[A-Z]{3}", texto) is not None
 
 
 def configurar_camara(indice):
@@ -153,25 +152,17 @@ def recortar_roi(frame, roi):
 
 
 def preparar_imagen_para_ocr(roi):
-    # 1. Convertir a escala de grises
+    # EasyOCR usa Deep Learning, por lo que funciona mucho MEJOR con la imagen a color 
+    # o en escala de grises suave. Binarizarla (blanco/negro puro) como hacíamos con 
+    # Tesseract en realidad destruye detalles importantes que la IA necesita.
     gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     
-    # 2. Mejorar el contraste automáticamente (CLAHE)
+    # Solo mejoramos un poco el contraste y la ampliamos, sin binarizar
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     gris = clahe.apply(gris)
     
-    # 3. Desenfoque ligero para eliminar ruido
-    gris = cv2.GaussianBlur(gris, (5, 5), 0)
-    
-    # 4. Binarización con el método de Otsu (calcula el umbral ideal automáticamente)
-    _, binaria = cv2.threshold(gris, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    
-    # 5. Operaciones morfológicas para rellenar huecos en las letras y limpiar puntitos
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    binaria = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel, iterations=1)
-    
-    # 6. Ampliar la imagen para que Tesseract lea mejor
-    procesada = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    # Ampliar para que las letras sean más grandes
+    procesada = cv2.resize(gris, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     
     return procesada
 
@@ -182,13 +173,16 @@ def leer_matricula_desde_roi(frame, roi):
 
     # EasyOCR devuelve una lista de tuplas: (caja, texto, confianza)
     # Ejemplo: [([[10, 10], [100, 10], [100, 40], [10, 40]], '1234 BCD', 0.89)]
-    resultados = lector.readtext(procesada)
+    # Pasamos una lista de caracteres permitidos para que la IA no se invente símbolos
+    resultados = lector.readtext(procesada, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
     
     texto_detectado = ""
     for (bbox, texto, confianza) in resultados:
-        texto_limpio = limpiar_texto(texto)
-        if len(texto_limpio) > 3: # Ignorar ruido de 1 o 2 letras
-            texto_detectado += texto_limpio
+        # Solo procesamos si la IA está bastante segura de lo que lee (confianza > 25%)
+        if confianza > 0.25:
+            texto_limpio = limpiar_texto(texto)
+            if len(texto_limpio) > 1:
+                texto_detectado += texto_limpio
 
     return texto_detectado, recorte, procesada
 
