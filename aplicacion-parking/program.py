@@ -1,5 +1,5 @@
 import cv2
-import easyocr
+import pytesseract
 import serial
 import time
 import re
@@ -15,12 +15,6 @@ BAUDIOS = 9600
 
 CERRADA = 105
 ABIERTA = 20
-
-# Inicializar EasyOCR (usará CPU en la Raspberry Pi)
-# Esto carga el modelo en memoria, por lo que tardará unos segundos al arrancar
-log_mensaje("Sistema", "Inicializando Motor de IA (EasyOCR)...")
-lector = easyocr.Reader(['es'], gpu=False)
-log_mensaje("Sistema", "Motor de IA listo.")
 
 def es_matricula_autorizada(matricula):
     try:
@@ -152,17 +146,25 @@ def recortar_roi(frame, roi):
 
 
 def preparar_imagen_para_ocr(roi):
-    # EasyOCR usa Deep Learning, por lo que funciona mucho MEJOR con la imagen a color 
-    # o en escala de grises suave. Binarizarla (blanco/negro puro) como hacíamos con 
-    # Tesseract en realidad destruye detalles importantes que la IA necesita.
+    # 1. Convertir a escala de grises
     gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     
-    # Solo mejoramos un poco el contraste y la ampliamos, sin binarizar
+    # 2. Mejorar el contraste automáticamente (CLAHE)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     gris = clahe.apply(gris)
     
-    # Ampliar para que las letras sean más grandes
-    procesada = cv2.resize(gris, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    # 3. Desenfoque ligero para eliminar ruido
+    gris = cv2.GaussianBlur(gris, (5, 5), 0)
+    
+    # 4. Binarización con el método de Otsu (calcula el umbral ideal automáticamente)
+    _, binaria = cv2.threshold(gris, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    
+    # 5. Operaciones morfológicas para rellenar huecos en las letras y limpiar puntitos
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    binaria = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel, iterations=1)
+    
+    # 6. Ampliar la imagen para que Tesseract lea mejor
+    procesada = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     
     return procesada
 
@@ -171,19 +173,13 @@ def leer_matricula_desde_roi(frame, roi):
     recorte = recortar_roi(frame, roi)
     procesada = preparar_imagen_para_ocr(recorte)
 
-    # EasyOCR devuelve una lista de tuplas: (caja, texto, confianza)
-    # Ejemplo: [([[10, 10], [100, 10], [100, 40], [10, 40]], '1234 BCD', 0.89)]
-    # Pasamos una lista de caracteres permitidos para que la IA no se invente símbolos
-    resultados = lector.readtext(procesada, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    # Volvemos a Tesseract, pero con una whitelist estricta para evitar que se invente símbolos
+    texto = pytesseract.image_to_string(
+        procesada,
+        config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    )
     
-    texto_detectado = ""
-    for (bbox, texto, confianza) in resultados:
-        # Solo procesamos si la IA está bastante segura de lo que lee (confianza > 25%)
-        if confianza > 0.25:
-            texto_limpio = limpiar_texto(texto)
-            if len(texto_limpio) > 1:
-                texto_detectado += texto_limpio
-
+    texto_detectado = limpiar_texto(texto)
     return texto_detectado, recorte, procesada
 
 
