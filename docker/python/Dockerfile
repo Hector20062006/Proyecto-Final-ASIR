@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Instalar dependencias de Python directamente
-# EasyOCR requiere PyTorch, que se instalará automáticamente como dependencia
+# IMPORTANTE: Instalamos la versión exclusiva de CPU de PyTorch primero. 
+# Si no, pip intentará descargar 2GB de drivers de NVIDIA (CUDA) inútiles para la Raspberry.
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir "numpy<2" opencv-python-headless==4.9.0.80 easyocr==1.7.1 pyserial==3.5 mysql-connector-python==8.3.0
 
 # Copiar el resto del código
