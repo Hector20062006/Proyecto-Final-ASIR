@@ -122,6 +122,12 @@ void loop() {
     digitalWrite(PIN_VERDE_ENTRADA, LOW);
     digitalWrite(PIN_ROJO_SALIDA, LOW);
     digitalWrite(PIN_VERDE_SALIDA, HIGH);
+  } else if (estadoLed == "3") {
+    // Test: TODOS los LEDs encendidos a la vez
+    digitalWrite(PIN_ROJO_ENTRADA, HIGH);
+    digitalWrite(PIN_VERDE_ENTRADA, HIGH);
+    digitalWrite(PIN_ROJO_SALIDA, HIGH);
+    digitalWrite(PIN_VERDE_SALIDA, HIGH);
   } else {
     // Reposo: Ambos rojos ON
     digitalWrite(PIN_ROJO_ENTRADA, HIGH);
