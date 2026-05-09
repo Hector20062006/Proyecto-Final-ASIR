@@ -11,6 +11,9 @@ const int PIN_VERDE_ENTRADA = 3;
 const int PIN_ROJO_SALIDA = 4;
 const int PIN_VERDE_SALIDA = 5;
 
+int lastAngle = 105; // Guardamos la última posición conocida
+
+
 void setup() {
   Serial.begin(9600);
 
@@ -22,6 +25,8 @@ void setup() {
 
   servoMotor.attach(SERVO_PIN);
   servoMotor.write(105); // tu cerrada inicial (ajústalo si quieres)
+  delay(500);            // Esperamos que llegue a la posición
+  servoMotor.detach();   // Lo apagamos para que no suene
 
   pinMode(PIN_ROJO_ENTRADA, OUTPUT);
   pinMode(PIN_VERDE_ENTRADA, OUTPUT);
@@ -72,20 +77,26 @@ void loop() {
   if (angulo < 0) angulo = 0;
   if (angulo > 180) angulo = 180;
 
-  // Movimiento suave del servo
-  int currentAngle = servoMotor.read();
-  if (currentAngle != angulo) {
-    if (currentAngle < angulo) {
-      for (int pos = currentAngle; pos <= angulo; pos++) {
+  // Movimiento suave del servo sin ruido en reposo
+  if (lastAngle != angulo) {
+    servoMotor.attach(SERVO_PIN);
+    servoMotor.write(lastAngle); // Asegura que empiece desde donde se quedó
+    
+    if (lastAngle < angulo) {
+      for (int pos = lastAngle; pos <= angulo; pos++) {
         servoMotor.write(pos);
         delay(15); // Ajusta este valor (15ms) para hacer el giro más lento o rápido
       }
     } else {
-      for (int pos = currentAngle; pos >= angulo; pos--) {
+      for (int pos = lastAngle; pos >= angulo; pos--) {
         servoMotor.write(pos);
         delay(15);
       }
     }
+    
+    lastAngle = angulo;
+    delay(200); // Espera a que la barrera se asiente físicamente
+    servoMotor.detach(); // Apaga el pulso PWM para que el motor deje de zumbar
   }
 
   l1.trim(); l2.trim(); estadoLed.trim();
