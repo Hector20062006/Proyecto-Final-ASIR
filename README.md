@@ -44,4 +44,4 @@ Esto levantará los siguientes servicios:
 *(Puedes acceder a la aplicación web navegando a `http://localhost` en tu navegador).*
 
 ---
-*Autor: Estudiante de ASIR.*
+*Autores: Imad y Hector*
