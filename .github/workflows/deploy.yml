@@ -14,6 +14,20 @@ jobs:
           cd ~/Proyecto-Final-ASIR
           git pull origin main
 
+      - name: Actualizar Arduino
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd ~/Proyecto-Final-ASIR/aplicacion-parking/servo_and_lcd_serial
+          
+          # Asegurarse de tener el core y librerías instaladas
+          arduino-cli core install arduino:avr
+          arduino-cli lib install "LiquidCrystal I2C"
+          arduino-cli lib install "Servo"
+          
+          # Compilar y subir al Arduino (Asumiendo Arduino Uno en /dev/ttyACM0)
+          arduino-cli compile --fqbn arduino:avr:uno servo_and_lcd_serial.ino
+          arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno servo_and_lcd_serial.ino
+
       - name: Redesplegar contenedores
         run: |
           cd ~/Proyecto-Final-ASIR

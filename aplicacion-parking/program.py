@@ -51,8 +51,8 @@ ULTIMO_TIEMPO = 0
 BLOQUEO_SEGUNDOS = 10
 
 
-def enviar(ser, angulo, linea1, linea2=""):
-    comando = f"{angulo}|{linea1}|{linea2}\n"
+def enviar(ser, angulo, linea1, linea2="", estado_led="0"):
+    comando = f"{angulo}|{linea1}|{linea2}|{estado_led}\n"
     ser.write(comando.encode())
     ser.flush()
 
@@ -78,17 +78,18 @@ def mostrar_espera(ser):
             time.sleep(0.4)
 
 
-def abrir_barrera(ser):
-    enviar(ser, ABIERTA, "Acceso", "autorizado")
+def abrir_barrera(ser, origen):
+    estado_led = "1" if "0" in origen else "2"
+    enviar(ser, ABIERTA, "Acceso", "autorizado", estado_led)
     time.sleep(1.5)
 
-    enviar(ser, ABIERTA, "Bienvenido", "Puede pasar")
+    enviar(ser, ABIERTA, "Bienvenido", "Puede pasar", estado_led)
     time.sleep(4)
 
-    enviar(ser, CERRADA, "Cerrando", "Espere")
+    enviar(ser, CERRADA, "Cerrando", "Espere", "0")
     time.sleep(2)
 
-    enviar(ser, CERRADA, "Esperando", "vehiculo")
+    enviar(ser, CERRADA, "Esperando", "vehiculo", "0")
     time.sleep(1)
 
 
@@ -209,7 +210,7 @@ def procesar_matricula(ser, matricula, origen):
         enviar(ser, CERRADA, "Matricula OK", matricula[:16])
         registrar_acceso(matricula, origen)
         time.sleep(2)
-        abrir_barrera(ser)
+        abrir_barrera(ser, origen)
     else:
         log_mensaje("Autorización", f"DENEGADO - La matrícula {matricula} NO está autorizada.")
         enviar(ser, CERRADA, "Matricula NO", matricula[:16])

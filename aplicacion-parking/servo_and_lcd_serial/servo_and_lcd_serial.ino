@@ -6,6 +6,10 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo servoMotor;
 
 const int SERVO_PIN = 9;
+const int PIN_ROJO_ENTRADA = 2;
+const int PIN_VERDE_ENTRADA = 3;
+const int PIN_ROJO_SALIDA = 4;
+const int PIN_VERDE_SALIDA = 5;
 
 void setup() {
   Serial.begin(9600);
@@ -18,6 +22,17 @@ void setup() {
 
   servoMotor.attach(SERVO_PIN);
   servoMotor.write(105); // tu cerrada inicial (ajústalo si quieres)
+
+  pinMode(PIN_ROJO_ENTRADA, OUTPUT);
+  pinMode(PIN_VERDE_ENTRADA, OUTPUT);
+  pinMode(PIN_ROJO_SALIDA, OUTPUT);
+  pinMode(PIN_VERDE_SALIDA, OUTPUT);
+
+  // Reposo inicial: Rojos encendidos, verdes apagados
+  digitalWrite(PIN_ROJO_ENTRADA, HIGH);
+  digitalWrite(PIN_VERDE_ENTRADA, LOW);
+  digitalWrite(PIN_ROJO_SALIDA, HIGH);
+  digitalWrite(PIN_VERDE_SALIDA, LOW);
 }
 
 void loop() {
@@ -26,17 +41,25 @@ void loop() {
   String msg = Serial.readStringUntil('\n');
   msg.trim();
 
-  // Esperamos: angulo|linea1|linea2
+  // Esperamos: angulo|linea1|linea2|estado_led
   int p1 = msg.indexOf('|');
   if (p1 < 0) return;
 
   int p2 = msg.indexOf('|', p1 + 1); // segundo separador
+  int p3 = -1;
+  if (p2 >= 0) p3 = msg.indexOf('|', p2 + 1); // tercer separador (estado led)
 
   String anguloStr = msg.substring(0, p1);
   String l1 = "";
   String l2 = "";
+  String estadoLed = "0";
 
-  if (p2 >= 0) {
+  if (p2 >= 0 && p3 >= 0) {
+    l1 = msg.substring(p1 + 1, p2);
+    l2 = msg.substring(p2 + 1, p3);
+    estadoLed = msg.substring(p3 + 1);
+  } else if (p2 >= 0) {
+    // Solo llegaron angulo|texto1|texto2
     l1 = msg.substring(p1 + 1, p2);
     l2 = msg.substring(p2 + 1);
   } else {
@@ -51,7 +74,7 @@ void loop() {
 
   servoMotor.write(angulo);
 
-  l1.trim(); l2.trim();
+  l1.trim(); l2.trim(); estadoLed.trim();
   if (l1.length() > 16) l1 = l1.substring(0, 16);
   if (l2.length() > 16) l2 = l2.substring(0, 16);
 
@@ -60,4 +83,25 @@ void loop() {
   lcd.print(l1);
   lcd.setCursor(0, 1);
   lcd.print(l2);
+
+  // Control de LEDs según estadoLed
+  if (estadoLed == "1") {
+    // Entrando: Verde Entrada ON, Rojo Entrada OFF
+    digitalWrite(PIN_ROJO_ENTRADA, LOW);
+    digitalWrite(PIN_VERDE_ENTRADA, HIGH);
+    digitalWrite(PIN_ROJO_SALIDA, HIGH);
+    digitalWrite(PIN_VERDE_SALIDA, LOW);
+  } else if (estadoLed == "2") {
+    // Saliendo: Verde Salida ON, Rojo Salida OFF
+    digitalWrite(PIN_ROJO_ENTRADA, HIGH);
+    digitalWrite(PIN_VERDE_ENTRADA, LOW);
+    digitalWrite(PIN_ROJO_SALIDA, LOW);
+    digitalWrite(PIN_VERDE_SALIDA, HIGH);
+  } else {
+    // Reposo: Ambos rojos ON
+    digitalWrite(PIN_ROJO_ENTRADA, HIGH);
+    digitalWrite(PIN_VERDE_ENTRADA, LOW);
+    digitalWrite(PIN_ROJO_SALIDA, HIGH);
+    digitalWrite(PIN_VERDE_SALIDA, LOW);
+  }
 }
