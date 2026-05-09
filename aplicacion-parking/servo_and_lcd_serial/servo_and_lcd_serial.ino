@@ -11,7 +11,7 @@ const int PIN_VERDE_ENTRADA = 3;
 const int PIN_ROJO_SALIDA = 4;
 const int PIN_VERDE_SALIDA = 5;
 
-int lastAngle = 105; // Guardamos la última posición conocida
+int lastAngle = 100; // Guardamos la última posición conocida
 
 
 void setup() {
@@ -24,7 +24,7 @@ void setup() {
   lcd.print("Listo");
 
   servoMotor.attach(SERVO_PIN);
-  servoMotor.write(105); // tu cerrada inicial (ajústalo si quieres)
+  servoMotor.write(100); // tu cerrada inicial (ajústalo si quieres)
   delay(500);            // Esperamos que llegue a la posición
   servoMotor.detach();   // Lo apagamos para que no suene
 

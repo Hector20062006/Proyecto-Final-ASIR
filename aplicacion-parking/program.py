@@ -13,7 +13,7 @@ def log_mensaje(origen, mensaje):
 PUERTO = "/dev/ttyACM0"
 BAUDIOS = 9600
 
-CERRADA = 105
+CERRADA = 100
 ABIERTA = 20
 
 def es_matricula_autorizada(matricula):
