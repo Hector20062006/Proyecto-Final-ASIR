@@ -30,6 +30,15 @@ El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma 
    - Todo se registra mediante una función propia `log_mensaje()`. 
    - Esta función añade la fecha y hora exactas y fuerza el volcado en pantalla (`flush=True`), lo que permite monitorear todo en tiempo real usando `docker logs -f python_app`.
 
+6. **Secuencia de Inicio y Red:**
+   - Al arrancar el contenedor, el sistema detecta automáticamente la IP física de la Raspberry Pi (`eth0`).
+   - Muestra esta IP en la pantalla LCD durante 60 segundos antes de iniciar el bucle de cámaras. Esto permite al administrador conocer la dirección de red sin necesidad de periféricos externos.
+
+7. **Experiencia de Usuario Mejorada:**
+   - Al detectar una matrícula válida, el sistema recupera el **nombre del usuario** de la base de datos.
+   - La pantalla LCD muestra una secuencia de tres mensajes: `Acceso autorizado`, `Bienvenido [Nombre]` y finalmente `Puede pasar`.
+   - Los semáforos se coordinan automáticamente: si entras por la Cámara 0, el semáforo de entrada se pone en verde y el de salida se asegura en rojo (y viceversa).
+
 ## Componentes Secundarios
 
 - **Semáforos LED:** El sistema cuenta con 4 LEDs (2 verdes y 2 rojos) que actúan como semáforos independientes para indicar la entrada (Cámara 0) o salida (Cámara 2) visualmente.

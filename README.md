@@ -8,6 +8,8 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 1. **Identificar Vehículos:** Usando reconocimiento óptico de caracteres (OCR) a través de cámaras estándar.
 2. **Validar Permisos:** Comprobar si el vehículo tiene autorización para entrar, basándose en registros centralizados.
 3. **Accionar Hardware:** Controlar mecánicamente una barrera de acceso e interactuar con el usuario a través de una pantalla.
+4. **Gestión de Red Automática:** Al arrancar, la Raspberry Pi detecta su IP física y la muestra en la pantalla del Arduino para facilitar la conexión.
+5. **Experiencia Personalizada:** El sistema saluda por su nombre a los conductores autorizados y gestiona semáforos inteligentes de entrada/salida.
 
 ## Estructura del Repositorio
 
