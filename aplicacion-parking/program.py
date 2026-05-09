@@ -21,13 +21,23 @@ def es_matricula_autorizada(matricula):
     try:
         conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
         cursor = conn.cursor()
-        cursor.execute("SELECT matricula FROM vehiculos WHERE matricula = %s", (matricula,))
-        valida = cursor.fetchone() is not None
+        # Buscamos el nombre del usuario asociado a esa matrícula
+        query = """
+            SELECT u.nombre 
+            FROM usuarios u 
+            JOIN vehiculos v ON u.dni = v.dni_usuario 
+            WHERE v.matricula = %s
+        """
+        cursor.execute(query, (matricula,))
+        resultado = cursor.fetchone()
         conn.close()
-        return valida
+        
+        if resultado:
+            return resultado[0] # Retornamos el nombre del usuario
+        return None
     except mysql.connector.Error as err:
         log_mensaje("Base de Datos", f"Error al validar matrícula: {err}")
-        return False
+        return None
 
 def registrar_acceso(matricula, origen):
     try:
@@ -110,14 +120,23 @@ def mostrar_espera(ser):
             time.sleep(0.4)
 
 
-def abrir_barrera(ser, origen):
-    # Invertimos el LED: ahora Cámara 0 activa estado "2" y Cámara 2 activa estado "1"
-    estado_led = "2" if "0" in origen else "1"
+def abrir_barrera(ser, origen, nombre_usuario=""):
+    # Estado 1: Entrada Verde / Salida Rojo (Para Cámara 0)
+    # Estado 2: Entrada Rojo / Salida Verde (Para Cámara 2)
+    estado_led = "1" if "0" in origen else "2"
+    
+    # 1. Acceso autorizado
     enviar(ser, ABIERTA, "Acceso", "autorizado", estado_led)
     time.sleep(1.5)
 
-    enviar(ser, ABIERTA, "Bienvenido", "Puede pasar", estado_led)
-    time.sleep(4)
+    # 2. Bienvenido + Nombre
+    linea_nombre = nombre_usuario[:16] if nombre_usuario else ""
+    enviar(ser, ABIERTA, "Bienvenido", linea_nombre, estado_led)
+    time.sleep(2)
+
+    # 3. Puede pasar
+    enviar(ser, ABIERTA, "Puede pasar", "", estado_led)
+    time.sleep(3)
 
     enviar(ser, CERRADA, "Cerrando", "Espere", "0")
     time.sleep(2)
@@ -238,12 +257,14 @@ def procesar_matricula(ser, matricula, origen):
 
     mostrar_espera(ser)
 
-    if es_matricula_autorizada(matricula):
-        log_mensaje("Autorización", f"OK - La matrícula {matricula} está AUTORIZADA.")
+    nombre = es_matricula_autorizada(matricula)
+    
+    if nombre:
+        log_mensaje("Autorización", f"OK - La matrícula {matricula} ({nombre}) está AUTORIZADA.")
         enviar(ser, CERRADA, "Matricula OK", matricula[:16])
         registrar_acceso(matricula, origen)
         time.sleep(2)
-        abrir_barrera(ser, origen)
+        abrir_barrera(ser, origen, nombre)
     else:
         log_mensaje("Autorización", f"DENEGADO - La matrícula {matricula} NO está autorizada.")
         enviar(ser, CERRADA, "Matricula NO", matricula[:16])
