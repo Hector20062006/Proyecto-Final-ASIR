@@ -5,6 +5,7 @@ import time
 import re
 import mysql.connector
 import datetime
+import socket
 
 def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -55,6 +56,37 @@ def enviar(ser, angulo, linea1, linea2="", estado_led="0"):
     comando = f"{angulo}|{linea1}|{linea2}|{estado_led}\n"
     ser.write(comando.encode())
     ser.flush()
+
+
+def get_ip_address():
+    # Intentamos obtener la IP de la interfaz activa usando sockets
+    for _ in range(15):  # Reintentar durante ~30 segundos si la red tarda en subir
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0)
+            # Intentamos conectar a una IP externa (Google DNS) para ver qué interfaz local se usaría
+            s.connect(('8.8.8.8', 1))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception:
+            time.sleep(2)
+    return "Sin IP"
+
+
+def mostrar_ip_al_arranque(ser):
+    log_mensaje("Sistema", "Iniciando secuencia de visualización de IP...")
+    ip = get_ip_address()
+    log_mensaje("Sistema", f"IP Detectada: {ip}")
+    
+    # 100 es CERRADA, "3" es modo Test (todos los LEDs encendidos)
+    enviar(ser, CERRADA, "IP de la RPi:", ip, "3")
+    
+    # Esperamos 60 segundos como solicitó el usuario
+    time.sleep(60)
+    
+    enviar(ser, CERRADA, "Iniciando...", "Sistema OK", "0")
+    time.sleep(2)
 
 
 def normalizar_matricula(m):
@@ -227,6 +259,9 @@ def guardar_debug(nombre, frame, recorte, procesada):
 def main():
     ser = serial.Serial(PUERTO, BAUDIOS, timeout=1)
     time.sleep(2.5)
+
+    # Mostramos la IP durante 1 minuto antes de empezar
+    mostrar_ip_al_arranque(ser)
 
     enviar(ser, CERRADA, "Esperando", "vehiculo")
     time.sleep(1)
