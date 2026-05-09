@@ -34,7 +34,7 @@ El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma 
 
 - **Semáforos LED:** El sistema cuenta con 4 LEDs (2 verdes y 2 rojos) que actúan como semáforos independientes para indicar la entrada (Cámara 0) o salida (Cámara 2) visualmente.
 - **`arduino.sh`:** Script para instalar y configurar `arduino-cli` en entornos Linux.
-- **Códigos de Arduino (`servo_and_lcd_serial.ino`):** Contiene el firmware en C++ que se sube al microcontrolador. Mueve el servomotor, actualiza la pantalla LCD y controla el estado de los semáforos LED según los comandos del puerto serie.
+- **Códigos de Arduino (`servo_and_lcd_serial.ino`):** Contiene el firmware en C++ que se sube al microcontrolador. Mueve el servomotor de forma suave y progresiva, apaga la señal PWM cuando está en reposo para eliminar el ruido eléctrico (jitter), actualiza la pantalla LCD y controla el estado de los semáforos LED según los comandos del puerto serie.
 
 ## Instrucciones de Instalación y Despliegue
 
