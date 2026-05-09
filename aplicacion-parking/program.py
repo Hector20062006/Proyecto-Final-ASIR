@@ -111,7 +111,8 @@ def mostrar_espera(ser):
 
 
 def abrir_barrera(ser, origen):
-    estado_led = "1" if "0" in origen else "2"
+    # Invertimos el LED: ahora Cámara 0 activa estado "2" y Cámara 2 activa estado "1"
+    estado_led = "2" if "0" in origen else "1"
     enviar(ser, ABIERTA, "Acceso", "autorizado", estado_led)
     time.sleep(1.5)
 
