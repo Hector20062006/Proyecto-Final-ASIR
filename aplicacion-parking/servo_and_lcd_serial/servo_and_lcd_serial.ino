@@ -72,7 +72,21 @@ void loop() {
   if (angulo < 0) angulo = 0;
   if (angulo > 180) angulo = 180;
 
-  servoMotor.write(angulo);
+  // Movimiento suave del servo
+  int currentAngle = servoMotor.read();
+  if (currentAngle != angulo) {
+    if (currentAngle < angulo) {
+      for (int pos = currentAngle; pos <= angulo; pos++) {
+        servoMotor.write(pos);
+        delay(15); // Ajusta este valor (15ms) para hacer el giro más lento o rápido
+      }
+    } else {
+      for (int pos = currentAngle; pos >= angulo; pos--) {
+        servoMotor.write(pos);
+        delay(15);
+      }
+    }
+  }
 
   l1.trim(); l2.trim(); estadoLed.trim();
   if (l1.length() > 16) l1 = l1.substring(0, 16);

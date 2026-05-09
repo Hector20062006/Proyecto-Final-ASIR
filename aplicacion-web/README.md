@@ -45,3 +45,6 @@ Aunque actualmente este módulo realiza las conexiones a la base de datos de man
 
 *   **Delegación de Lógica (Refactorización):** El objetivo es que la aplicación web no realice lógica de negocio compleja ni consultas de escritura directas (salvo la API de cámara actualmente). Todo se delegará a un servidor central en Python al cual la web consultará mediante llamadas HTTP.
 *   **Front Controller:** En el futuro se buscará centralizar todas las peticiones a través de un único `index.php` (Routing) para tener un control más estricto sobre las peticiones y mejorar la seguridad global de la aplicación.
+
+---
+*Autores: Imad y Hector*

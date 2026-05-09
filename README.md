@@ -21,12 +21,12 @@ El repositorio se divide para separar la funcionalidad técnica de la documentac
 ## Tecnologías Principales y Disciplinas Aplicadas
 
 En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las siguientes ramas:
-* **Sistemas Operativos:** Uso de automatismos en Linux para la descarga y ejecución de dependencias (Arduino CLI).
+* **Sistemas Operativos:** Uso de automatismos en Linux y GitHub Actions para la descarga y ejecución de dependencias, y el flasheo automático del código de Arduino.
 * **Fundamentos de Programación:** Desarrollo de la lógica central en Python y programación de hardware mediante código C++.
-* **Hardware y Redes:** Intercomunicación del puerto Serial, control de voltajes y señales I2C para el display lcd y modulación de ancho de pulsos en el servomotor.
+* **Hardware y Redes:** Intercomunicación del puerto Serial, control de 4 LEDs (semáforos de entrada y salida), display lcd I2C y servomotor para la barrera.
 * **Bases de Datos:** Almacenamiento y persistencia en un SGBD relacional (MySQL/MariaDB).
 * **Implantación de Aplicaciones Web:** Programación de interfaces y backend con PHP, HTML5 y CSS3.
-* **Despliegue con Contenedores:** Orquestación de servicios (Base de datos, API Python y Web PHP) mediante Docker y Docker Compose.
+* **Despliegue con Contenedores:** Orquestación de servicios (Base de datos, API Python y Web PHP) mediante Docker y Docker Compose, junto con CI/CD de despliegue continuo.
 
 ## 🚀 Despliegue Rápido con Docker
 

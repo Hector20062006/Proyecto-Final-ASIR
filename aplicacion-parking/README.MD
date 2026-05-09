@@ -32,13 +32,17 @@ El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma 
 
 ## Componentes Secundarios
 
-- **`arduino.sh`:** Script para instalar y configurar `arduino-cli` en entornos Linux sin interfaz gráfica.
-- **Códigos de Arduino (Carpetas `servo_serial`, etc):** Contienen el firmware en C++ que se sube al microcontrolador. Escuchan por el puerto serie y mueven el servomotor (Pin 9) a la vez que actualizan la pantalla LCD.
+- **Semáforos LED:** El sistema cuenta con 4 LEDs (2 verdes y 2 rojos) que actúan como semáforos independientes para indicar la entrada (Cámara 0) o salida (Cámara 2) visualmente.
+- **`arduino.sh`:** Script para instalar y configurar `arduino-cli` en entornos Linux.
+- **Códigos de Arduino (`servo_and_lcd_serial.ino`):** Contiene el firmware en C++ que se sube al microcontrolador. Mueve el servomotor, actualiza la pantalla LCD y controla el estado de los semáforos LED según los comandos del puerto serie.
 
 ## Instrucciones de Instalación y Despliegue
 
+### 🤖 CI/CD Automático (GitHub Actions)
+La subida de código al Arduino está totalmente automatizada. Cualquier cambio en la rama `main` disparará un flujo de trabajo (`deploy.yml`) que usará `arduino-cli` para compilar y flashear el Arduino conectado a `/dev/ttyACM0` en la Raspberry Pi.
+
 ### 🐳 Despliegue en Raspberry Pi (Docker)
-Este es el método recomendado. El código está preparado para ejecutarse dentro del servicio `python_app` del archivo `docker-compose.yml`.
+Este es el método recomendado para los contenedores de software. El código está preparado para ejecutarse dentro del servicio `python_app` del archivo `docker-compose.yml`.
 - Requiere ejecutar el contenedor en modo privilegiado (`privileged: true`) y mapear correctamente los dispositivos de hardware (`/dev/videoX`).
 - Si modificas el área de captura (ROI) en el código, simplemente reinicia el contenedor con `docker-compose restart python_app`.
 
