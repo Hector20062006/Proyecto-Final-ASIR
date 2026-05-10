@@ -150,18 +150,25 @@ def abrir_barrera(ser, origen, nombre_usuario=""):
     # Estado 2: Entrada Rojo / Salida Verde (Para Cámara 2)
     estado_led = "1" if "0" in origen else "2"
     
+    es_entrada = "0" in origen
+    linea_nombre = nombre_usuario[:16] if nombre_usuario else ""
+
     # 1. Acceso autorizado
     enviar(ser, ABIERTA, "Acceso", "autorizado", estado_led)
     time.sleep(1.5)
 
-    # 2. Bienvenido + Nombre
-    linea_nombre = nombre_usuario[:16] if nombre_usuario else ""
-    enviar(ser, ABIERTA, "Bienvenido", linea_nombre, estado_led)
-    time.sleep(2)
-
-    # 3. Puede pasar
-    enviar(ser, ABIERTA, "Puede pasar", "", estado_led)
-    time.sleep(3)
+    if es_entrada:
+        # 2. Bienvenido + Nombre  |  3. Puede pasar
+        enviar(ser, ABIERTA, "Bienvenido", linea_nombre, estado_led)
+        time.sleep(2)
+        enviar(ser, ABIERTA, "Puede pasar", "", estado_led)
+        time.sleep(3)
+    else:
+        # 2. Adios + Nombre  |  3. Buen viaje
+        enviar(ser, ABIERTA, "Adios", linea_nombre, estado_led)
+        time.sleep(2)
+        enviar(ser, ABIERTA, "Buen viaje!", "", estado_led)
+        time.sleep(3)
 
     enviar(ser, CERRADA, "Cerrando", "Espere", "0")
     time.sleep(2)
