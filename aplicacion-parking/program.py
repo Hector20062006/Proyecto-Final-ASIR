@@ -128,8 +128,9 @@ def normalizar_matricula(m):
     return m.strip().upper().replace(" ", "").replace("-", "")
 
 
-def mostrar_espera(ser):
-    enviar(ser, CERRADA, "Bienvenido", "")
+def mostrar_espera(ser, origen):
+    saludo = "Bienvenido" if "0" in origen else "Adios"
+    enviar(ser, CERRADA, saludo, "")
     time.sleep(1.5)
 
     cuadros = [
@@ -370,7 +371,7 @@ def procesar_matricula(ser, matricula, origen):
 
     log_mensaje(origen, f"¡MATRÍCULA CONFIRMADA!: {matricula}")
 
-    mostrar_espera(ser)
+    mostrar_espera(ser, origen)
 
     nombre = es_matricula_autorizada(matricula)
 
