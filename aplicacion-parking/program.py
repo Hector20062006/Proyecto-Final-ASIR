@@ -129,7 +129,7 @@ def normalizar_matricula(m):
 
 
 def mostrar_espera(ser, origen):
-    saludo = "Bienvenido" if "0" in origen else "Buenas"
+    saludo = "Bienvenido" if "0" in origen else "Espere por favor..."
     enviar(ser, CERRADA, saludo, "")
     time.sleep(1.5)
 
