@@ -6,6 +6,7 @@ import re
 import mysql.connector
 import datetime
 import socket
+import numpy as np
 
 def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -166,8 +167,8 @@ def limpiar_texto(texto):
 
 
 def es_matricula_valida(texto):
-    # Permitir cualquier letra de la A a la Z (incluyendo vocales para las pruebas del usuario)
-    return re.fullmatch(r"\d{4}[A-Z]{3}", texto) is not None
+    # Formato: 4 números (del 0 al 9) y 3 letras (A-Z)
+    return re.fullmatch(r"[0-9]{4}[A-Z]{3}", texto) is not None
 
 
 def configurar_camara(indice):
@@ -198,42 +199,86 @@ def recortar_roi(frame, roi):
     return frame[y:y+h, x:x+w]
 
 
-def preparar_imagen_para_ocr(roi):
-    # 1. Convertir a escala de grises
+def localizar_matricula(roi):
+    # Intentamos encontrar el rectángulo de la matrícula para recortar el ruido
     gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    # Filtro bilateral para reducir ruido manteniendo bordes
+    filtrada = cv2.bilateralFilter(gris, 11, 17, 17)
+    bordes = cv2.Canny(filtrada, 30, 200)
     
-    # 2. Mejorar el contraste automáticamente (CLAHE)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    gris = clahe.apply(gris)
+    contornos, _ = cv2.findContours(bordes.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contornos = sorted(contornos, key=cv2.contourArea, reverse=True)[:10]
     
-    # 3. Desenfoque ligero para eliminar ruido
-    gris = cv2.GaussianBlur(gris, (5, 5), 0)
+    for c in contornos:
+        perimetro = cv2.arcLength(c, True)
+        aproximacion = cv2.approxPolyDP(c, 0.02 * perimetro, True)
+        if len(aproximacion) == 4: # Si tiene 4 esquinas, es un candidato
+            x, y, w, h = cv2.boundingRect(aproximacion)
+            # Verificamos una relación de aspecto razonable para una matrícula
+            aspect_ratio = w / float(h)
+            if 2.0 < aspect_ratio < 5.0:
+                return roi[y:y+h, x:x+w], True
     
-    # 4. Binarización con el método de Otsu (calcula el umbral ideal automáticamente)
-    _, binaria = cv2.threshold(gris, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    return roi, False # Si no encuentra nada claro, devuelve el ROI original
+
+
+def preparar_imagen_para_ocr(imagen, metodo=1):
+    # 1. Escala de grises si no lo está
+    if len(imagen.shape) == 3:
+        gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    else:
+        gris = imagen
+
+    # 2. Filtro bilateral para preservar bordes de las letras
+    suave = cv2.bilateralFilter(gris, 9, 75, 75)
     
-    # 5. Operaciones morfológicas para rellenar huecos en las letras y limpiar puntitos
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    binaria = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel, iterations=1)
+    # 3. Afilado (Sharpening) para definir mejor los caracteres
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    afilada = cv2.filter2D(suave, -1, kernel)
+
+    # 4. Binarización
+    if metodo == 1:
+        # Umbral adaptativo (mejor para iluminación variable)
+        binaria = cv2.adaptiveThreshold(afilada, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    else:
+        # Método Otsu como alternativa
+        _, binaria = cv2.threshold(afilada, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     
-    # 6. Ampliar la imagen para que Tesseract lea mejor
+    # 5. Redimensionar para que Tesseract lea mejor (mínimo 300dpi equivalentes)
     procesada = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     
     return procesada
 
 
 def leer_matricula_desde_roi(frame, roi):
-    recorte = recortar_roi(frame, roi)
-    procesada = preparar_imagen_para_ocr(recorte)
-
-    # Volvemos a Tesseract, pero con una whitelist estricta para evitar que se invente símbolos
-    texto = pytesseract.image_to_string(
-        procesada,
-        config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    )
+    recorte_original = recortar_roi(frame, roi)
     
-    texto_detectado = limpiar_texto(texto)
-    return texto_detectado, recorte, procesada
+    # Intentamos localizar la placa exacta
+    placa_detectada, encontrada = localizar_matricula(recorte_original)
+    
+    # Estrategia: Probar hasta 2 métodos de pre-procesamiento
+    for metodo in [1, 2]:
+        procesada = preparar_imagen_para_ocr(placa_detectada, metodo=metodo)
+        
+        # Si hemos encontrado la placa exacta, PSM 8 (Single word) suele ser mejor.
+        # Si no, PSM 7 (Single line) es más robusto para el ROI completo.
+        psm = "--psm 8" if encontrada else "--psm 7"
+        config = f"{psm} -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        
+        texto = pytesseract.image_to_string(procesada, config=config)
+        texto_detectado = limpiar_texto(texto)
+        
+        if es_matricula_valida(texto_detectado):
+            return texto_detectado, placa_detectada, procesada
+            
+    # Si falla con el recorte, intentamos una última vez con el ROI original completo
+    if encontrada:
+        procesada_roi = preparar_imagen_para_ocr(recorte_original, metodo=1)
+        texto = pytesseract.image_to_string(procesada_roi, config="--psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        texto_detectado = limpiar_texto(texto)
+        return texto_detectado, recorte_original, procesada_roi
+
+    return texto_detectado, placa_detectada, procesada
 
 
 def debe_ignorar_matricula(matricula):
@@ -331,7 +376,7 @@ def main():
         else:
             log_mensaje("Cámara 2", "Error obteniendo imagen (Frame vacío)")
 
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 if __name__ == "__main__":
