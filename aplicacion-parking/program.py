@@ -7,6 +7,7 @@ import mysql.connector
 import datetime
 import socket
 import numpy as np
+import threading
 
 def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -58,15 +59,21 @@ def registrar_acceso(matricula, origen):
 ROI_CAM0 = (300, 300, 1320, 600)
 ROI_CAM2 = (300, 300, 1320, 600)
 
-ULTIMA_MATRICULA = None
-ULTIMO_TIEMPO = 0
+# --- Estado de bloqueo por cámara para evitar procesar la misma matrícula dos veces ---
 BLOQUEO_SEGUNDOS = 10
+_estado_camaras = {
+    "Cámara 0": {"ultima_matricula": None, "ultimo_tiempo": 0, "votos": {}, "lock": threading.Lock()},
+    "Cámara 2": {"ultima_matricula": None, "ultimo_tiempo": 0, "votos": {}, "lock": threading.Lock()},
+}
+VOTOS_NECESARIOS = 2  # La matrícula debe leerse N veces seguidas antes de procesarse
+_serial_lock = threading.Lock()  # Lock para el puerto serie (solo un hilo a la vez)
 
 
 def enviar(ser, angulo, linea1, linea2="", estado_led="0"):
-    comando = f"{angulo}|{linea1}|{linea2}|{estado_led}\n"
-    ser.write(comando.encode())
-    ser.flush()
+    with _serial_lock:
+        comando = f"{angulo}|{linea1}|{linea2}|{estado_led}\n"
+        ser.write(comando.encode())
+        ser.flush()
 
 
 def get_ip_address():
@@ -177,15 +184,17 @@ def configurar_camara(indice):
     if not cap.isOpened():
         return None
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    cap.set(cv2.CAP_PROP_FPS, 5)
+    # Reducimos a 720p para que el OCR sea más rápido en la RPi
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FPS, 10)
 
     try:
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
     except:
         pass
 
+    # Buffer mínimo: siempre procesamos el frame más reciente
     try:
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     except:
@@ -227,27 +236,32 @@ def preparar_imagen_para_ocr(imagen, metodo=1):
     if len(imagen.shape) == 3:
         gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     else:
-        gris = imagen
+        gris = imagen.copy()
 
-    # 2. Filtro bilateral para preservar bordes de las letras
-    suave = cv2.bilateralFilter(gris, 9, 75, 75)
-    
-    # 3. Afilado (Sharpening) para definir mejor los caracteres
-    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-    afilada = cv2.filter2D(suave, -1, kernel)
+    # 2. CLAHE para mejorar el contraste de forma rápida
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    gris = clahe.apply(gris)
+
+    # 3. Desenfoque ligero y rápido para eliminar sal-pimienta
+    gris = cv2.GaussianBlur(gris, (3, 3), 0)
 
     # 4. Binarización
     if metodo == 1:
-        # Umbral adaptativo (mejor para iluminación variable)
-        binaria = cv2.adaptiveThreshold(afilada, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        # Umbral adaptativo: robusto ante cambios de luz
+        binaria = cv2.adaptiveThreshold(gris, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
     else:
-        # Método Otsu como alternativa
-        _, binaria = cv2.threshold(afilada, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    
-    # 5. Redimensionar para que Tesseract lea mejor (mínimo 300dpi equivalentes)
-    procesada = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    
-    return procesada
+        # Otsu: rápido como alternativa
+        _, binaria = cv2.threshold(gris, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+    # 5. Escalar al tamaño mínimo que Tesseract necesita (evitar escalados excesivos)
+    h, w = binaria.shape
+    if h < 80:
+        factor = 80.0 / h
+        binaria = cv2.resize(binaria, None, fx=factor, fy=factor, interpolation=cv2.INTER_CUBIC)
+    elif h < 150:
+        binaria = cv2.resize(binaria, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+
+    return binaria
 
 
 def leer_matricula_desde_roi(frame, roi):
@@ -281,29 +295,49 @@ def leer_matricula_desde_roi(frame, roi):
     return texto_detectado, placa_detectada, procesada
 
 
-def debe_ignorar_matricula(matricula):
-    global ULTIMA_MATRICULA, ULTIMO_TIEMPO
-
+def debe_ignorar_matricula(matricula, origen):
+    """Devuelve True si la matrícula ya fue procesada recientemente en esta cámara."""
+    estado = _estado_camaras[origen]
     ahora = time.time()
-
-    if ULTIMA_MATRICULA == matricula and (ahora - ULTIMO_TIEMPO) < BLOQUEO_SEGUNDOS:
-        return True
-
-    ULTIMA_MATRICULA = matricula
-    ULTIMO_TIEMPO = ahora
+    with estado["lock"]:
+        if estado["ultima_matricula"] == matricula and (ahora - estado["ultimo_tiempo"]) < BLOQUEO_SEGUNDOS:
+            return True
     return False
 
 
+def registrar_voto(matricula, origen):
+    """Acumula votos por matrícula. Devuelve True si supera el umbral de confirmación."""
+    estado = _estado_camaras[origen]
+    with estado["lock"]:
+        votos = estado["votos"]
+        votos[matricula] = votos.get(matricula, 0) + 1
+        # Reiniciar votos de otras matrículas para evitar acumulación
+        for m in list(votos.keys()):
+            if m != matricula:
+                del votos[m]
+        if votos[matricula] >= VOTOS_NECESARIOS:
+            votos[matricula] = 0  # Reset para no reprocesar
+            estado["ultima_matricula"] = matricula
+            estado["ultimo_tiempo"] = time.time()
+            return True
+        return False
+
+
 def procesar_matricula(ser, matricula, origen):
-    if debe_ignorar_matricula(matricula):
+    if debe_ignorar_matricula(matricula, origen):
         return
 
-    log_mensaje(origen, f"¡MATRÍCULA DETECTADA!: {matricula}")
+    # Sistema de votos: solo actuar si se confirma N veces seguidas
+    if not registrar_voto(matricula, origen):
+        log_mensaje(origen, f"Candidata ({matricula}) - esperando confirmación...")
+        return
+
+    log_mensaje(origen, f"¡MATRÍCULA CONFIRMADA!: {matricula}")
 
     mostrar_espera(ser)
 
     nombre = es_matricula_autorizada(matricula)
-    
+
     if nombre:
         log_mensaje("Autorización", f"OK - La matrícula {matricula} ({nombre}) está AUTORIZADA.")
         enviar(ser, CERRADA, "Matricula OK", matricula[:16])
@@ -321,6 +355,23 @@ def guardar_debug(nombre, frame, recorte, procesada):
     cv2.imwrite(f"./{nombre}_frame.jpg", frame)
     cv2.imwrite(f"./{nombre}_roi.jpg", recorte)
     cv2.imwrite(f"./{nombre}_ocr.jpg", procesada)
+
+
+def bucle_camara(ser, cap, roi, nombre_cam):
+    """Hilo independiente que procesa una cámara en bucle continuo."""
+    log_mensaje(nombre_cam, "Hilo de cámara iniciado.")
+    while True:
+        ok, frame = cap.read()
+        if ok:
+            texto, recorte, proc = leer_matricula_desde_roi(frame, roi)
+            if es_matricula_valida(texto):
+                guardar_debug(nombre_cam.replace(" ", "").lower(), frame, recorte, proc)
+                procesar_matricula(ser, normalizar_matricula(texto), nombre_cam)
+            elif texto:
+                log_mensaje(nombre_cam, f"Texto ilegible: '{texto}'")
+        else:
+            log_mensaje(nombre_cam, "Frame vacío, reintentando...")
+        time.sleep(0.3)  # ~3 lecturas por segundo por cámara en paralelo
 
 
 def main():
@@ -349,34 +400,22 @@ def main():
 
     time.sleep(2)
 
+    # Vaciar buffer inicial de frames
     for _ in range(5):
         cam0.read()
         cam2.read()
 
-    while True:
-        ok0, frame0 = cam0.read()
-        if ok0:
-            texto0, recorte0, proc0 = leer_matricula_desde_roi(frame0, ROI_CAM0)
-            if es_matricula_valida(texto0):
-                guardar_debug("cam0", frame0, recorte0, proc0)
-                procesar_matricula(ser, normalizar_matricula(texto0), "Cámara 0")
-            elif texto0:
-                log_mensaje("Cámara 0", f"Texto ilegible o no es matrícula: '{texto0}'")
-        else:
-            log_mensaje("Cámara 0", "Error obteniendo imagen (Frame vacío)")
+    # Lanzar las dos cámaras en hilos independientes (procesamiento paralelo)
+    hilo_cam0 = threading.Thread(target=bucle_camara, args=(ser, cam0, ROI_CAM0, "Cámara 0"), daemon=True)
+    hilo_cam2 = threading.Thread(target=bucle_camara, args=(ser, cam2, ROI_CAM2, "Cámara 2"), daemon=True)
 
-        ok2, frame2 = cam2.read()
-        if ok2:
-            texto2, recorte2, proc2 = leer_matricula_desde_roi(frame2, ROI_CAM2)
-            if es_matricula_valida(texto2):
-                guardar_debug("cam2", frame2, recorte2, proc2)
-                procesar_matricula(ser, normalizar_matricula(texto2), "Cámara 2")
-            elif texto2:
-                log_mensaje("Cámara 2", f"Texto ilegible o no es matrícula: '{texto2}'")
-        else:
-            log_mensaje("Cámara 2", "Error obteniendo imagen (Frame vacío)")
+    hilo_cam0.start()
+    hilo_cam2.start()
+    log_mensaje("Sistema", "Ambas cámaras activas en modo paralelo.")
 
-        time.sleep(0.5)
+    # Mantener el hilo principal vivo
+    hilo_cam0.join()
+    hilo_cam2.join()
 
 
 if __name__ == "__main__":
