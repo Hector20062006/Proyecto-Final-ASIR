@@ -54,6 +54,23 @@ def registrar_acceso(matricula, origen):
     except mysql.connector.Error as err:
         log_mensaje("Base de Datos", f"Error al registrar acceso: {err}")
 
+
+def obtener_ultimo_movimiento(matricula):
+    """Devuelve 'ENTRADA', 'SALIDA' o None si no hay registros."""
+    try:
+        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT tipo_movimiento FROM accesos WHERE matricula = %s ORDER BY fecha_hora DESC LIMIT 1",
+            (matricula,)
+        )
+        resultado = cursor.fetchone()
+        conn.close()
+        return resultado[0] if resultado else None
+    except mysql.connector.Error as err:
+        log_mensaje("Base de Datos", f"Error al consultar estado del vehículo: {err}")
+        return None
+
 # Zona de lectura de cada cámara: (x, y, ancho, alto)
 # Valores ajustados para mayor rango en resolución 1080p
 ROI_CAM0 = (300, 300, 1320, 600)
@@ -159,6 +176,18 @@ def denegar_paso(ser):
 
     enviar(ser, CERRADA, "Matricula", "no valida")
     time.sleep(2)
+
+    enviar(ser, CERRADA, "Esperando", "vehiculo")
+    time.sleep(1)
+
+
+def denegar_estado(ser, linea1, linea2):
+    """Deniega el acceso por estado incorrecto (ya dentro o ya fuera)."""
+    enviar(ser, CERRADA, "Acceso", "denegado")
+    time.sleep(1.5)
+
+    enviar(ser, CERRADA, linea1, linea2)
+    time.sleep(2.5)
 
     enviar(ser, CERRADA, "Esperando", "vehiculo")
     time.sleep(1)
@@ -338,17 +367,35 @@ def procesar_matricula(ser, matricula, origen):
 
     nombre = es_matricula_autorizada(matricula)
 
-    if nombre:
-        log_mensaje("Autorización", f"OK - La matrícula {matricula} ({nombre}) está AUTORIZADA.")
-        enviar(ser, CERRADA, "Matricula OK", matricula[:16])
-        registrar_acceso(matricula, origen)
-        time.sleep(2)
-        abrir_barrera(ser, origen, nombre)
-    else:
+    if not nombre:
         log_mensaje("Autorización", f"DENEGADO - La matrícula {matricula} NO está autorizada.")
         enviar(ser, CERRADA, "Matricula NO", matricula[:16])
         time.sleep(2)
         denegar_paso(ser)
+        return
+
+    # --- Comprobación de estado del vehículo ---
+    es_entrada = "0" in origen
+    ultimo_movimiento = obtener_ultimo_movimiento(matricula)
+
+    if es_entrada and ultimo_movimiento == "ENTRADA":
+        # El coche ya está dentro del parking
+        log_mensaje("Estado", f"BLOQUEADO - {matricula} ya está dentro del parking.")
+        denegar_estado(ser, "Ya en parking", "No puede entrar")
+        return
+
+    if not es_entrada and ultimo_movimiento != "ENTRADA":
+        # El coche no está dentro (nunca entró o ya salió)
+        log_mensaje("Estado", f"BLOQUEADO - {matricula} no está registrado como dentro.")
+        denegar_estado(ser, "No esta dentro", "No puede salir")
+        return
+
+    # --- Acceso válido ---
+    log_mensaje("Autorización", f"OK - La matrícula {matricula} ({nombre}) está AUTORIZADA.")
+    enviar(ser, CERRADA, "Matricula OK", matricula[:16])
+    registrar_acceso(matricula, origen)
+    time.sleep(2)
+    abrir_barrera(ser, origen, nombre)
 
 
 def guardar_debug(nombre, frame, recorte, procesada):
