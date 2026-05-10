@@ -17,7 +17,7 @@ PUERTO = "/dev/ttyACM0"
 BAUDIOS = 9600
 
 CERRADA = 100
-ABIERTA = 20
+ABIERTA = 10
 
 def es_matricula_autorizada(matricula):
     try:
