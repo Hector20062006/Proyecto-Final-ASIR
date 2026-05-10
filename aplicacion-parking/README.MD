@@ -1,72 +1,115 @@
 # Documentación Técnica: Aplicación de Parking (Reconocimiento de Matrículas)
 
-Esta carpeta contiene el cerebro del sistema de control de barreras. Aquí se aloja el software escrito en Python (`program.py`) que gestiona las cámaras, la Inteligencia Artificial (OCR) y la comunicación con el hardware.
+Esta carpeta contiene el cerebro del sistema de control de barreras. Aquí se aloja el software escrito en Python (`program.py`) que gestiona las cámaras, el OCR y la comunicación con el hardware Arduino.
 
 ## 🧠 El Archivo Principal: `program.py`
 
-El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma continua (bucle infinito) analizando vídeo en tiempo real. Recientemente ha sido mejorado para ser altamente resistente a fallos en entornos Docker y Raspberry Pi.
+El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma continua analizando vídeo en tiempo real desde dos cámaras simultáneas procesadas en **hilos paralelos independientes**.
 
-### Funcionalidades Clave de `program.py`:
+---
 
-1. **Gestión de Hardware Seguro:**
-   - Se conecta al Arduino por puerto Serie (`/dev/ttyACM0` a 9600 baudios).
-   - Inicia la captura de dos cámaras simultáneas de forma dinámica. Si una cámara falla o se desconecta, el sistema genera un log crítico sin romper el resto de los servicios.
+### Funcionalidades Clave
 
-2. **Preprocesado de Imagen Avanzado (OpenCV):**
-   - Para que la lectura de matrículas no falle por culpa del sol o las sombras, el código recorta un área de interés (`ROI`) e invoca la función `preparar_imagen_para_ocr()`.
-   - **CLAHE:** Ecualiza la iluminación de la imagen en tiempo real.
-   - **Filtro de Otsu:** Calcula matemáticamente el punto perfecto para convertir la foto a blanco y negro puro, independientemente de la luz exterior.
-   - **Operaciones Morfológicas:** Cierra pequeños "agujeros" en las letras y elimina puntitos de ruido para que la imagen quede perfecta.
+#### 1. 🚗 Detección de Matrículas (OCR Mejorado)
 
-3. **Inteligencia Artificial (Tesseract OCR):**
-   - Utiliza `pytesseract` para extraer el texto.
-   - **Whitelist estricta:** Se le ha configurado una lista blanca (`0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`) para evitar que lea símbolos raros en la carretera o en la chapa del coche.
+El sistema utiliza una pipeline de varias etapas para maximizar la precisión de lectura:
 
-4. **Conexión Directa a Base de Datos MySQL:**
-   - **Validación:** Consulta si la matrícula detectada existe en la tabla `vehiculos` (`es_matricula_autorizada()`). Está protegido con un bloque `try/except` para no colgarse si la base de datos pierde conexión.
-   - **Historial (NUEVO):** Automáticamente registra el acceso en la tabla `accesos`, guardando la matrícula, la hora exacta y si fue una "ENTRADA" (Cámara 0) o "SALIDA" (Cámara 2) mediante la función `registrar_acceso()`.
+- **Localización por Contornos:** Antes del OCR, se busca el rectángulo de la matrícula dentro del ROI usando detección de bordes (Canny) y análisis de contornos. Esto elimina el ruido de fondo del vehículo.
+- **Pre-procesado de Imagen:**
+  - **CLAHE:** Ecualización de iluminación adaptativa para manejar sombras y reflejos.
+  - **Gaussian Blur (3×3):** Elimina ruido de sal y pimienta de forma rápida.
+  - **Umbral Adaptativo / Otsu:** Binarización robusta ante cambios de luz.
+  - **Reescalado inteligente:** Solo se amplía la imagen si es demasiado pequeña para Tesseract.
+- **Sistema de Doble Intento:** Si el método de pre-procesado principal falla, se prueba automáticamente una segunda variante (Otsu vs. Adaptativo).
+- **Validación de Formato:** Se acepta el formato estándar español: 4 dígitos (0-9) + 3 letras (`[0-9]{4}[A-Z]{3}`).
 
-5. **Sistema de Logs para Docker:**
-   - Todo se registra mediante una función propia `log_mensaje()`. 
-   - Esta función añade la fecha y hora exactas y fuerza el volcado en pantalla (`flush=True`), lo que permite monitorear todo en tiempo real usando `docker logs -f python_app`.
+#### 2. ⚡ Procesamiento Paralelo (Threading)
 
-6. **Secuencia de Inicio y Red:**
-   - Al arrancar el contenedor, el sistema detecta automáticamente la IP física de la Raspberry Pi (`eth0`).
-   - Muestra esta IP en la pantalla LCD durante 60 segundos antes de iniciar el bucle de cámaras. Esto permite al administrador conocer la dirección de red sin necesidad de periféricos externos.
+Las dos cámaras funcionan en **hilos independientes** (`threading.Thread`):
+- **Cámara 0:** Cámara de **ENTRADA** → ~3 lecturas/segundo.
+- **Cámara 2:** Cámara de **SALIDA** → ~3 lecturas/segundo.
+- El acceso al puerto serie (Arduino) está protegido con `threading.Lock()` para evitar conflictos entre hilos.
 
-7. **Experiencia de Usuario Mejorada:**
-   - Al detectar una matrícula válida, el sistema recupera el **nombre del usuario** de la base de datos.
-   - La pantalla LCD muestra una secuencia de tres mensajes: `Acceso autorizado`, `Bienvenido [Nombre]` y finalmente `Puede pasar`.
-   - Los semáforos se coordinan automáticamente: si entras por la Cámara 0, el semáforo de entrada se pone en verde y el de salida se asegura en rojo (y viceversa).
+#### 3. 🗳️ Sistema de Votos (Anti-Falsos Positivos)
+
+Para evitar que un frame borroso o texto similar a una matrícula dispare la barrera incorrectamente:
+- Una matrícula debe ser detectada **2 veces seguidas** (`VOTOS_NECESARIOS = 2`) por la misma cámara antes de procesarse.
+- Los votos de otras matrículas candidatas se resetean automáticamente.
+
+#### 4. 🔒 Control de Estado del Vehículo
+
+El sistema consulta la tabla `accesos` en la base de datos para conocer el **último movimiento** de cada vehículo:
+
+| Situación | Resultado | Mensaje en LCD |
+|---|---|---|
+| Intenta **entrar** pero su última acción fue ENTRADA | **Bloqueado** | `Ya en parking / No puede entrar` |
+| Intenta **salir** pero su última acción NO fue ENTRADA | **Bloqueado** | `No esta dentro / No puede salir` |
+| Estado correcto y matrícula autorizada | **Acceso permitido** | Secuencia de bienvenida/despedida |
+
+#### 5. 💬 Mensajes Personalizados en LCD
+
+El sistema diferencia la secuencia de mensajes según la dirección del movimiento:
+
+| Paso | **Entrada** (Cámara 0) | **Salida** (Cámara 2) |
+|---|---|---|
+| 1 (detección) | `Bienvenido` → `Comprobando matrícula...` | `Adios` → `Comprobando matrícula...` |
+| 2 (validado) | `Matricula OK` | `Matricula OK` |
+| 3 (barrera) | `Acceso / autorizado` | `Acceso / autorizado` |
+| 4 (mensaje) | `Bienvenido / [Nombre]` | `Adios / [Nombre]` |
+| 5 (paso) | `Puede pasar` | `Buen viaje!` |
+| 6 (cierre) | `Cerrando / Espere` | `Cerrando / Espere` |
+
+#### 6. 🌐 Secuencia de Inicio y Red
+
+Al arrancar el contenedor, el sistema detecta automáticamente la IP física de la Raspberry Pi y la muestra en la pantalla LCD durante **60 segundos**, facilitando el acceso remoto sin periféricos externos.
+
+#### 7. 📋 Sistema de Logs
+
+Todo se registra con fecha y hora exactas mediante `log_mensaje()`, con `flush=True` para visualización en tiempo real:
+```bash
+docker logs -f python_app
+```
+
+---
+
+## 📡 Protocolo Serial (Comunicación con Arduino)
+
+El formato de comando enviado al Arduino es:
+```
+ángulo|línea_lcd_1|línea_lcd_2|estado_led\n
+```
+
+| Parámetro | Valores |
+|---|---|
+| `ángulo` | `20` (abierta) / `100` (cerrada) |
+| `línea_lcd_1` | Texto línea superior del LCD (máx. 16 chars) |
+| `línea_lcd_2` | Texto línea inferior del LCD (máx. 16 chars) |
+| `estado_led` | `0` Reposo (rojos), `1` Verde Entrada, `2` Verde Salida, `3` Test (todos) |
+
+---
 
 ## Componentes Secundarios
 
-- **Semáforos LED:** El sistema cuenta con 4 LEDs (2 verdes y 2 rojos) que actúan como semáforos independientes para indicar la entrada (Cámara 0) o salida (Cámara 2) visualmente.
+- **Semáforos LED:** 4 LEDs (2 verdes + 2 rojos) que indican el estado de entrada/salida visualmente.
 - **`arduino.sh`:** Script para instalar y configurar `arduino-cli` en entornos Linux.
-- **Códigos de Arduino (`servo_and_lcd_serial.ino`):** Contiene el firmware en C++ que se sube al microcontrolador. Mueve el servomotor de forma suave y progresiva, apaga la señal PWM cuando está en reposo para eliminar el ruido eléctrico (jitter), actualiza la pantalla LCD y controla el estado de los semáforos LED según los comandos del puerto serie. Posee también un modo de test (estado `3`) para iluminar todos los LEDs a la vez, y una calibración de ángulo cerrado a `100º` para quedar perfectamente alineada.
+- **Firmware Arduino (`servo_and_lcd_serial.ino`):** Firmware en C++ que mueve el servomotor suavemente, gestiona la pantalla LCD I2C y controla los 4 LEDs. Incluye modo test (estado `3`) y calibración de ángulo cerrado a `100º`.
 
-### 🔌 Protocolo Serial (Pruebas Manuales)
-El sistema acepta comandos manuales si le envías una cadena por el puerto serie (por ejemplo, usando `echo "..." > /dev/ttyACM0`). El formato que espera el Arduino es:
-`ángulo|línea_lcd_1|línea_lcd_2|estado_led`
+---
 
-*   `ángulo`: `20` para abrir, `100` para cerrar.
-*   `estado_led`: `0` (Reposo/Rojos), `1` (Verde Entrada), `2` (Verde Salida), `3` (Test, todos encendidos).
+## 🐳 Instrucciones de Despliegue
 
-## Instrucciones de Instalación y Despliegue
+### CI/CD Automático (GitHub Actions)
+Cualquier push a `main` disparará el flujo de trabajo que compilará y flasheará el Arduino en la Raspberry Pi automáticamente.
 
-### 🤖 CI/CD Automático (GitHub Actions)
-La subida de código al Arduino está totalmente automatizada. Cualquier cambio en la rama `main` disparará un flujo de trabajo (`deploy.yml`) que usará `arduino-cli` para compilar y flashear el Arduino conectado a `/dev/ttyACM0` en la Raspberry Pi.
+### Despliegue Docker (Recomendado)
+```bash
+docker compose up -d
+```
+Requiere modo privilegiado (`privileged: true`) y mapeo de dispositivos de hardware en `docker-compose.yml`.
 
-### 🐳 Despliegue en Raspberry Pi (Docker)
-Este es el método recomendado para los contenedores de software. El código está preparado para ejecutarse dentro del servicio `python_app` del archivo `docker-compose.yml`.
-- Requiere ejecutar el contenedor en modo privilegiado (`privileged: true`) y mapear correctamente los dispositivos de hardware (`/dev/videoX`).
-- Si modificas el área de captura (ROI) en el código, simplemente reinicia el contenedor con `docker-compose restart python_app`.
-
-### 💻 Pruebas Locales (Windows/Linux)
-Si quieres probar el script `program.py` en tu ordenador sin usar Docker:
-1. Instala Python 3 y Tesseract OCR en tu sistema.
-2. Instala las librerías necesarias:
-   ```bash
-   pip install opencv-python pytesseract pyserial mysql-connector-python
-   ```
-3. Ejecuta el script: `python program.py`. *(Nota: En Windows, deberás cambiar la variable PUERTO de `/dev/ttyACM0` a tu puerto correspondiente, ej. `COM3`).*
+### Pruebas Locales
+```bash
+pip install opencv-python pytesseract pyserial mysql-connector-python numpy
+python program.py
+```
+> **Nota:** En Windows, cambiar `PUERTO = "/dev/ttyACM0"` por el puerto COM correspondiente (ej. `COM3`).
