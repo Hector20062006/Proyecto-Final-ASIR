@@ -129,7 +129,7 @@ def normalizar_matricula(m):
 
 
 def mostrar_espera(ser, origen):
-    saludo = "Bienvenido" if "0" in origen else "Adios"
+    saludo = "Bienvenido" if "0" in origen else "Buenas"
     enviar(ser, CERRADA, saludo, "")
     time.sleep(1.5)
 
@@ -165,8 +165,8 @@ def abrir_barrera(ser, origen, nombre_usuario=""):
         enviar(ser, ABIERTA, "Puede pasar", "", estado_led)
         time.sleep(3)
     else:
-        # 2. Adios + Nombre  |  3. Buen viaje
-        enviar(ser, ABIERTA, "Adios", linea_nombre, estado_led)
+        # 2. Hasta pronto + Nombre  |  3. Buen viaje
+        enviar(ser, ABIERTA, "Hasta pronto", linea_nombre, estado_led)
         time.sleep(2)
         enviar(ser, ABIERTA, "Buen viaje!", "", estado_led)
         time.sleep(3)
