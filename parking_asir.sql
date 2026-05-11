@@ -99,6 +99,23 @@ INSERT INTO `vehiculos` (`matricula`, `marca_modelo`, `dni_usuario`) VALUES
 ('1377DSY', 'GOLF 5', '33333333C'),
 ('2334DMM', 'ASTRA', '22222222B');
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `mal_aparcado`
+--
+
+CREATE TABLE `mal_aparcado` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `matricula` varchar(10) NOT NULL,
+  `reportado_por` varchar(9) NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  `comentario` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `matricula` (`matricula`),
+  KEY `reportado_por` (`reportado_por`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Índices para tablas volcadas
 --
