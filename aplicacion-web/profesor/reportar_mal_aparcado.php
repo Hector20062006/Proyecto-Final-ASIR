@@ -1,85 +1,104 @@
 <?php
-// Versión BLINDADA para evitar salida de basura
-ob_start();
 session_start();
+require '../conexion.php';
+require '../telegram_config.php';
 
-// ── Seguridad ────────────────────────────────────────────────────────────────
-if (!isset($_SESSION['role']) || strpos(strtolower(trim($_SESSION['role'])), 'profesor') === false) {
-    header('Content-Type: application/json; charset=utf-8');
-    ob_end_clean();
-    die(json_encode(['success' => false, 'message' => 'Sesión no válida o caducada. Reintenta login.']));
+// Seguridad: Solo profesores
+if (!isset($_SESSION['role']) || strpos(strtolower($_SESSION['role']), 'profesor') === false) {
+    header("Location: ../login.php");
+    exit;
 }
 
-header('Content-Type: application/json; charset=utf-8');
+$mensaje_status = "";
+$tipo_status = "";
 
-require_once '../conexion.php';
-require_once '../telegram_config.php';
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
+    $matricula = mysqli_real_escape_with_like_support($_POST['matricula'], $conexion); // Assuming a sanitization helper or using direct escape
+    $matricula = strtoupper(trim($_POST['matricula']));
+    $matricula = mysqli_real_escape_string($conexion, $matricula);
+    $dni_reportador = $_SESSION['dni'];
 
-$matricula  = strtoupper(trim($_POST['matricula'] ?? ''));
-$comentario = trim($_POST['comentario'] ?? '');
+    // 1. Verificar si la matrícula existe y quién es el dueño
+    $sql = "SELECT v.matricula, u.nombre, u.apellidos, u.id_rol 
+            FROM vehiculos v 
+            JOIN usuarios u ON v.dni_usuario = u.dni 
+            WHERE v.matricula = '$matricula'";
+    
+    $res = mysqli_query($conexion, $sql);
 
-if (empty($matricula)) {
-    ob_end_clean();
-    die(json_encode(['success' => false, 'message' => 'Falta la matrícula.']));
+    if (mysqli_num_rows($res) > 0) {
+        $datos = mysqli_fetch_assoc($res);
+        $nombre_dueno = $datos['nombre'] . " " . $datos['apellidos'];
+        
+        // 2. Registrar en la base de datos
+        $sql_insert = "INSERT INTO reportes_mal_aparcado (matricula, dni_reportador) VALUES ('$matricula', '$dni_reportador')";
+        if (mysqli_query($conexion, $sql_insert)) {
+            
+            // 3. Enviar notificación por Telegram
+            $texto_telegram = "⚠️ <b>AVISO DE ESTACIONAMIENTO</b> ⚠️\n\n";
+            $texto_telegram .= "El vehículo con matrícula <b>$matricula</b> está mal aparcado.\n";
+            $texto_telegram .= "Propietario/a: <b>$nombre_dueno</b>\n\n";
+            $texto_telegram .= "Por favor, retírelo lo antes posible para no obstruir el paso. Gracias.";
+
+            $resultado_tel = enviarMensajeTelegram($texto_telegram);
+            
+            $mensaje_status = "Reporte enviado correctamente. Se ha notificado al propietario por Telegram.";
+            $tipo_status = "success";
+        } else {
+            $mensaje_status = "Error al registrar el reporte en la base de datos.";
+            $tipo_status = "error";
+        }
+    } else {
+        $mensaje_status = "La matrícula introducida no está registrada en el sistema.";
+        $tipo_status = "error";
+    }
 }
 
-$matricula_esc  = mysqli_real_escape_string($conexion, $matricula);
-$comentario_esc = mysqli_real_escape_string($conexion, $comentario);
-$dni_profesor   = $_SESSION['dni'];
+require '../header2.php';
+?>
 
-// ── Buscar propietario ───────────────────────────────────────────────────────
-$sql_owner = "SELECT u.nombre, u.apellidos, u.email FROM vehiculos v INNER JOIN usuarios u ON v.dni_usuario = u.dni WHERE v.matricula = '$matricula_esc' LIMIT 1";
-$res_owner = mysqli_query($conexion, $sql_owner);
-$propietario_texto = '⚠️ Propietario desconocido';
-$propietario_nombre = 'Desconocido';
+<div class="container">
+    <div class="card-reporte" style="max-width: 600px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <h2 style="color: #c0392b; text-align: center; margin-bottom: 25px;">
+            <i class="fas fa-exclamation-triangle"></i> Reportar Mal Aparcado
+        </h2>
+        
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Introduce la matrícula del vehículo que está obstaculizando o mal estacionado para avisar al propietario.
+        </p>
 
-if ($res_owner && mysqli_num_rows($res_owner) > 0) {
-    $owner = mysqli_fetch_assoc($res_owner);
-    $propietario_nombre = $owner['nombre'] . ' ' . $owner['apellidos'];
-    $propietario_texto = "👤 Propietario: {$propietario_nombre}";
-}
+        <?php if ($mensaje_status): ?>
+            <div class="alerta <?php echo $tipo_status; ?>" style="padding: 15px; margin-bottom: 20px; border-radius: 8px; text-align: center; <?php echo ($tipo_status == 'success') ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'; ?>">
+                <?php echo $mensaje_status; ?>
+            </div>
+        <?php endif; ?>
 
-// ── Datos del reportador ─────────────────────────────────────────────────────
-$dni_esc = mysqli_real_escape_string($conexion, $dni_profesor);
-$sql_prof = "SELECT nombre, apellidos FROM usuarios WHERE dni = '$dni_esc' LIMIT 1";
-$res_prof = mysqli_query($conexion, $sql_prof);
-$datos_prof = mysqli_fetch_assoc($res_prof);
-$nombre_prof = $datos_prof ? $datos_prof['nombre'] . ' ' . $datos_prof['apellidos'] : $dni_profesor;
+        <form action="" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="form-group">
+                <label for="matricula" style="font-weight: bold; color: #2c3e50; display: block; margin-bottom: 8px;">Matrícula del Vehículo</label>
+                <input type="text" name="matricula" id="matricula" placeholder="Ej: 1234ABC" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; text-transform: uppercase; text-align: center; letter-spacing: 2px;">
+            </div>
 
-// ── Guardar ──────────────────────────────────────────────────────────────────
-$sql_insert = "INSERT INTO mal_aparcado (matricula, reportado_por, comentario) VALUES ('$matricula_esc', '$dni_esc', '$comentario_esc')";
-if (!mysqli_query($conexion, $sql_insert)) {
-    $err = mysqli_error($conexion);
-    ob_end_clean();
-    die(json_encode(['success' => false, 'message' => 'Error BD: ' . $err]));
-}
+            <button type="submit" style="background-color: #c0392b; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                <i class="fab fa-telegram-plane"></i> ENVIAR AVISO A TELEGRAM
+            </button>
+            
+            <a href="index.php" style="text-align: center; color: #7f8c8d; text-decoration: none; font-size: 14px; margin-top: 10px;">
+                <i class="fas fa-arrow-left"></i> Volver al Panel
+            </a>
+        </form>
+    </div>
+</div>
 
-// ── Telegram ─────────────────────────────────────────────────────────────────
-$fecha_hora = date('d/m/Y H:i');
-$msg = "🚨 MAL APARCAMIENTO 🚨\n\nMatrícula: {$matricula}\n{$propietario_texto}\nReportado por: {$nombre_prof}\nFecha: {$fecha_hora}";
-if(!empty($comentario)) $msg .= "\nNota: {$comentario}";
+<style>
+    .card-reporte button:hover {
+        background-color: #a93226 !important;
+    }
+    input:focus {
+        border-color: #c0392b !important;
+        outline: none;
+    }
+</style>
 
-$url = "https://api.telegram.org/bot" . TELEGRAM_BOT_TOKEN . "/sendMessage";
-$ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => 'Content-Type: application/x-www-form-urlencoded', 'content' => http_build_query(['chat_id' => TELEGRAM_CHAT_ID, 'text' => $msg]), 'timeout' => 5], 'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-$resp = @file_get_contents($url, false, $ctx);
-$data_tg = json_decode($resp, true);
-
-// ── RESPUESTA FINAL ──────────────────────────────────────────────────────────
-// Limpiamos CUALQUIER cosa que se haya podido colar (espacios, warnings...)
-ob_end_clean();
-
-if (!$data_tg || !$data_tg['ok']) {
-    $error_tg = $data_tg['description'] ?? 'Error de conexión con Telegram';
-    die(json_encode([
-        'success' => true, 
-        'warning' => true, 
-        'message' => 'Reporte guardado, pero Telegram falló: ' . $error_tg,
-        'propietario' => $propietario_nombre
-    ]));
-}
-
-die(json_encode([
-    'success' => true, 
-    'message' => '¡Reporte enviado y aviso de Telegram enviado!',
-    'propietario' => $propietario_nombre
-]));
+<?php require '../footer2.php'; ?>

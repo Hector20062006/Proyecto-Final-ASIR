@@ -92,7 +92,6 @@ mysqli_close($conexion);
     <a href="actualizar_usuario.php"><button style=" background-color: #34495e;">Actualizar usuarios</button></a>
     <a href="historial_accesos.php"><button style=" background-color: #34495e;">Ver Historial</button></a>
     <a href="control_barrera.php"><button style=" background-color: #34495e;">Fichar en Barrera</button></a>
-    <a href="mal_aparcado.php"><button style=" background-color: #c0392b;">🚨 Mal Aparcamiento</button></a>
     <a href="../logout.php"><button>Cerrar Sesión y Salir</button></a>
 </div>
 
