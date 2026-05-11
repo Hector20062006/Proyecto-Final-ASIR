@@ -12,6 +12,9 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 4. **Accionar Hardware:** Controlar mecánicamente una barrera de acceso e interactuar con el usuario a través de una pantalla LCD y semáforos LED.
 5. **Gestión de Red Automática:** Al arrancar, la Raspberry Pi detecta su IP física y la muestra en la pantalla del Arduino para facilitar la conexión.
 6. **Experiencia Personalizada:** El sistema saluda por su nombre a los conductores en la entrada (`Bienvenido, [Nombre]`) y les despide en la salida (`Adios, [Nombre]` / `Buen viaje!`).
+7. **Reporte de Mal Aparcado:** Sistema para que los profesores notifiquen vehículos mal estacionados mediante la matrícula.
+8. **Notificaciones en Tiempo Real:** Integración con la API de Telegram para enviar alertas automáticas al canal común del parking.
+9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
 
 ## Estructura del Repositorio
 
@@ -46,6 +49,14 @@ Esto levantará los siguientes servicios:
 3. **web**: Contenedor con el servidor web para la interfaz gráfica de administración en PHP (Puerto 80).
 
 *(Puedes acceder a la aplicación web navegando a `http://localhost` en tu navegador).*
+
+## 🔐 Configuración y Seguridad
+
+Para el correcto funcionamiento de las notificaciones de Telegram, el sistema utiliza variables de entorno. Sigue estos pasos para configurarlo:
+
+1. Copia el archivo de ejemplo: `cp .env.example .env`
+2. Edita el archivo `.env` e introduce tu `TELEGRAM_BOT_TOKEN` y tu `TELEGRAM_CHAT_ID`.
+3. El archivo `.env` está protegido por el `.gitignore` para asegurar que tus tokens nunca se suban al repositorio público.
 
 ---
 *Autores: Imad y Hector*

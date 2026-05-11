@@ -22,13 +22,18 @@ La aplicación cuenta con carpetas independientes para segmentar la lógica y el
 *   📁 **`profesor/`**: Panel para personal docente. Les permite gestionar sus propios vehículos y revisar el historial de sus accesos.
 *   📁 **`alumno/`**: Panel básico para el alumnado. Similar al del profesor, restringido a visualizar sus datos y estado de acceso.
 
-### 3. API de Recepción de Hardware (`api_camara.php`)
+### 3. Sistema de Reporte de Mal Aparcado (`profesor/reportar_mal_aparcado.php`)
+*   **Finalidad:** Permite a los profesores notificar vehículos que estén obstaculizando el parking de forma manual.
+*   **Integración con Telegram:** El sistema identifica al dueño del vehículo por su matrícula y envía un aviso instantáneo al canal común de profesores a través de un Bot de Telegram. El mensaje incluye el propietario y un motivo opcional (ej: "bloqueando mi salida").
+*   **Gestión Administrativa:** El administrador cuenta con una vista específica (`admin/ver_incidencias.php`) para auditar todos estos reportes, pudiendo filtrar por matrícula, fecha o propietario.
+
+### 4. API de Recepción de Hardware (`api_camara.php`)
 Es un archivo fundamental que actúa como puente de integración entre el **Contenedor de Visión Artificial (Python)** y la base de datos.
 *   **Funcionamiento:** Escucha peticiones HTTP `POST` enviadas por el programa de Python cada vez que se detecta una matrícula de forma física en el parking.
 *   **Registro de Datos:** Recibe los parámetros `matricula` y `tipo_movimiento` (ENTRADA o SALIDA) y los inserta inmediatamente en la tabla `accesos` junto con la marca de tiempo exacta del servidor.
 *   **Respuesta:** Devuelve un simple `OK` al proceso de Python para confirmar que el registro se guardó correctamente en MySQL, o un mensaje de error si hubo algún problema de conexión.
 
-### 4. Estructura y Vistas (`header.php` / `footer.php`)
+### 5. Estructura y Vistas (`header.php` / `footer.php`)
 Para evitar repetir código y mantener un diseño uniforme, la interfaz gráfica está modularizada. Los archivos de cabecera (donde se cargan CSS, logos y menús) y los pies de página se incluyen dinámicamente en todas las vistas mediante sentencias `require` o `include`.
 
 ---

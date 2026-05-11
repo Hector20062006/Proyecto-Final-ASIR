@@ -55,6 +55,18 @@ def registrar_acceso(matricula, origen):
         log_mensaje("Base de Datos", f"Error al registrar acceso: {err}")
 
 
+def registrar_intento_denegado(matricula, origen):
+    try:
+        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO intentos_denegados (matricula, camara) VALUES (%s, %s)", (matricula, origen))
+        conn.commit()
+        conn.close()
+        log_mensaje("Base de Datos", f"INTENTO DENEGADO REGISTRADO: {matricula} en {origen}")
+    except mysql.connector.Error as err:
+        log_mensaje("Base de Datos", f"Error al registrar intento denegado: {err}")
+
+
 def obtener_ultimo_movimiento(matricula):
     """Devuelve 'ENTRADA', 'SALIDA' o None si no hay registros."""
     try:
@@ -377,6 +389,7 @@ def procesar_matricula(ser, matricula, origen):
 
     if not nombre:
         log_mensaje("Autorización", f"DENEGADO - La matrícula {matricula} NO está autorizada.")
+        registrar_intento_denegado(matricula, origen)
         enviar(ser, CERRADA, "Matricula NO", matricula[:16])
         time.sleep(2)
         denegar_paso(ser)

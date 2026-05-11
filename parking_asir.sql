@@ -182,6 +182,17 @@ CREATE TABLE IF NOT EXISTS `reportes_mal_aparcado` (
   FOREIGN KEY (`dni_reportador`) REFERENCES `usuarios` (`dni`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+-- Estructura de tabla para la tabla `intentos_denegados`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `intentos_denegados` (
+  `id_intento` int(11) NOT NULL AUTO_INCREMENT,
+  `matricula` varchar(10) NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  `camara` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id_intento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
