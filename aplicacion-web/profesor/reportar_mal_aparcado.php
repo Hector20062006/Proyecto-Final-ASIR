@@ -13,7 +13,6 @@ $mensaje_status = "";
 $tipo_status = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
-    $matricula = mysqli_real_escape_with_like_support($_POST['matricula'], $conexion); // Assuming a sanitization helper or using direct escape
     $matricula = strtoupper(trim($_POST['matricula']));
     $matricula = mysqli_real_escape_string($conexion, $matricula);
     $dni_reportador = $_SESSION['dni'];
