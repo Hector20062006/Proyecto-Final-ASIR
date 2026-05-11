@@ -1,9 +1,10 @@
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema y la extensión mysqli para PHP
+# Instalar dependencias del sistema y extensiones PHP necesarias
 RUN apt-get update && apt-get install -y \
-    && docker-php-ext-install mysqli pdo pdo_mysql \
-    && docker-php-ext-enable mysqli
+    libcurl4-openssl-dev \
+    && docker-php-ext-install mysqli pdo pdo_mysql curl \
+    && docker-php-ext-enable mysqli curl
 
 # Habilitar mod_rewrite de Apache si se necesita
 RUN a2enmod rewrite
