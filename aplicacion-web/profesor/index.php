@@ -125,10 +125,10 @@ $res_vehi = mysqli_query($conexion, $sql_vehi);
         </div>
     </div>
 
-    <div style="margin-top: 40px; background: #fdf2f2; padding: 20px; border-radius: 12px; border: 1px solid #f5c6cb; text-align: center;">
-        <h3 style="color: #c0392b; margin-top: 0;"><i class="fas fa-exclamation-circle"></i> ¿Coche mal aparcado?</h3>
+    <div class="banner-incidencia">
+        <h3><i class="fas fa-exclamation-circle"></i> ¿Coche mal aparcado?</h3>
         <p>Si has detectado un vehículo que obstaculiza el parking, puedes avisar al propietario.</p>
-        <a href="reportar_mal_aparcado.php"><button style="background-color: #c0392b; color: white;">Reportar Mal Aparcado</button></a>
+        <a href="reportar_mal_aparcado.php"><button class="btn-reporte">Reportar Mal Aparcado</button></a>
     </div>
 
     <div style="margin-top: 30px; text-align: center;">

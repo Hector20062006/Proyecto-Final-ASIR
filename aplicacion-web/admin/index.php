@@ -91,6 +91,7 @@ mysqli_close($conexion);
     <a href="borrar_usuario.php"><button style=" background-color: #34495e;">Borrar usuarios</button></a>
     <a href="actualizar_usuario.php"><button style=" background-color: #34495e;">Actualizar usuarios</button></a>
     <a href="historial_accesos.php"><button style=" background-color: #34495e;">Ver Historial</button></a>
+    <a href="ver_incidencias.php"><button class="btn-admin-incidencias">Ver Incidencias</button></a>
     <a href="control_barrera.php"><button style=" background-color: #34495e;">Fichar en Barrera</button></a>
     <a href="../logout.php"><button>Cerrar Sesión y Salir</button></a>
 </div>

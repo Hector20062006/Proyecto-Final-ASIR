@@ -13,6 +13,11 @@ services:
       - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   web:
     build: 
@@ -26,7 +31,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   python_app:
     build: 
@@ -41,7 +47,8 @@ services:
     group_add:
       - video
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     # Mapeo de dispositivos de hardware para la Raspberry Pi
     devices:
       - "/dev/ttyACM0:/dev/ttyACM0"  # Arduino

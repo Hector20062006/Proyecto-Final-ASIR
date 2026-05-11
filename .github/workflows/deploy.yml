@@ -14,6 +14,11 @@ jobs:
           cd ~/Proyecto-Final-ASIR
           git pull origin main
 
+      - name: Detener contenedores (Liberar puerto serie)
+        run: |
+          cd ~/Proyecto-Final-ASIR
+          docker compose down || true
+
       - name: Actualizar Arduino
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -33,3 +38,17 @@ jobs:
           cd ~/Proyecto-Final-ASIR
           docker compose up --build -d
           docker compose ps
+
+      - name: Actualizar base de datos
+        run: |
+          docker exec mysql_db mysql -u root -proot parking_ASIR -e "
+          CREATE TABLE IF NOT EXISTS reportes_mal_aparcado (
+            id_reporte int(11) NOT NULL AUTO_INCREMENT,
+            matricula varchar(10) NOT NULL,
+            dni_reportador varchar(9) NOT NULL,
+            motivo text DEFAULT NULL,
+            fecha_hora datetime DEFAULT current_timestamp(),
+            PRIMARY KEY (id_reporte),
+            FOREIGN KEY (matricula) REFERENCES vehiculos (matricula) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (dni_reportador) REFERENCES usuarios (dni) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"

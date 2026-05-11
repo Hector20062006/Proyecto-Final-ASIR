@@ -175,6 +175,7 @@ CREATE TABLE IF NOT EXISTS `reportes_mal_aparcado` (
   `id_reporte` int(11) NOT NULL AUTO_INCREMENT,
   `matricula` varchar(10) NOT NULL,
   `dni_reportador` varchar(9) NOT NULL,
+  `motivo` text DEFAULT NULL,
   `fecha_hora` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id_reporte`),
   FOREIGN KEY (`matricula`) REFERENCES `vehiculos` (`matricula`) ON DELETE CASCADE ON UPDATE CASCADE,
