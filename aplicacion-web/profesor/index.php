@@ -248,7 +248,22 @@ $res_vehi = mysqli_query($conexion, $sql_vehi);
                 body:   formData
             });
 
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error("Error parsing JSON:", parseError);
+                console.error("Raw response:", text);
+                feedback.style.background = '#f8d7da';
+                feedback.style.border     = '1px solid #f5c6cb';
+                feedback.style.color      = '#721c24';
+                feedback.innerHTML = '❌ Error en la respuesta del servidor. Revisa la consola.';
+                feedback.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Aviso';
+                return;
+            }
 
             if (data.success) {
                 const isWarning = data.warning === true;
