@@ -10,6 +10,17 @@ if (!isset($_SESSION['role']) || strtolower(trim($_SESSION['role'])) !== 'admini
 require '../conexion.php';
 require '../header2.php';
 
+// --- AUTOCREACIÓN DE TABLA SI NO EXISTE ---
+$query_create = "CREATE TABLE IF NOT EXISTS `intentos_denegados` (
+  `id_intento` int(11) NOT NULL AUTO_INCREMENT,
+  `matricula` varchar(10) NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  `camara` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id_intento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+mysqli_query($conexion, $query_create);
+// ------------------------------------------
+
 // Inicializar variables de filtro
 $filtro_matricula = isset($_GET['matricula']) ? mysqli_real_escape_string($conexion, trim($_GET['matricula'])) : '';
 $filtro_fecha = isset($_GET['fecha']) ? mysqli_real_escape_string($conexion, trim($_GET['fecha'])) : '';

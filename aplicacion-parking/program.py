@@ -59,6 +59,17 @@ def registrar_intento_denegado(matricula, origen):
     try:
         conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
         cursor = conn.cursor()
+        
+        # Asegurar que la tabla existe antes de insertar
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS intentos_denegados (
+                id_intento INT AUTO_INCREMENT PRIMARY KEY,
+                matricula VARCHAR(10) NOT NULL,
+                fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+                camara VARCHAR(50)
+            )
+        """)
+        
         cursor.execute("INSERT INTO intentos_denegados (matricula, camara) VALUES (%s, %s)", (matricula, origen))
         conn.commit()
         conn.close()
