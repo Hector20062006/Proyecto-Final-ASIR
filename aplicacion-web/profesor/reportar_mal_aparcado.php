@@ -25,9 +25,11 @@ $sql_check = "CREATE TABLE IF NOT EXISTS `reportes_mal_aparcado` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 mysqli_query($conexion, $sql_check);
 
-// Asegurar que la columna 'motivo' existe (para instalaciones existentes)
-$sql_alter = "ALTER TABLE `reportes_mal_aparcado` ADD COLUMN IF NOT EXISTS `motivo` text DEFAULT NULL AFTER `dni_reportador`";
-mysqli_query($conexion, $sql_alter);
+// Asegurar que la columna 'motivo' existe (para instalaciones existentes en MySQL estándar)
+$check_column = mysqli_query($conexion, "SHOW COLUMNS FROM `reportes_mal_aparcado` LIKE 'motivo'");
+if (mysqli_num_rows($check_column) == 0) {
+    mysqli_query($conexion, "ALTER TABLE `reportes_mal_aparcado` ADD COLUMN `motivo` text DEFAULT NULL AFTER `dni_reportador`");
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
     $matricula = strtoupper(trim($_POST['matricula']));
