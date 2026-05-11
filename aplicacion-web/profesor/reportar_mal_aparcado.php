@@ -12,6 +12,18 @@ if (!isset($_SESSION['role']) || strpos(strtolower($_SESSION['role']), 'profesor
 $mensaje_status = "";
 $tipo_status = "";
 
+// Asegurar que la tabla existe (fallback por si no se ha ejecutado la acción de deploy)
+$sql_check = "CREATE TABLE IF NOT EXISTS `reportes_mal_aparcado` (
+  `id_reporte` int(11) NOT NULL AUTO_INCREMENT,
+  `matricula` varchar(10) NOT NULL,
+  `dni_reportador` varchar(9) NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_reporte`),
+  FOREIGN KEY (`matricula`) REFERENCES `vehiculos` (`matricula`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`dni_reportador`) REFERENCES `usuarios` (`dni`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+mysqli_query($conexion, $sql_check);
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
     $matricula = strtoupper(trim($_POST['matricula']));
     $matricula = mysqli_real_escape_string($conexion, $matricula);
