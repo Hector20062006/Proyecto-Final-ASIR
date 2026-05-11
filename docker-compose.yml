@@ -26,6 +26,9 @@ services:
     pull_policy: build
     container_name: web_php
     restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     volumes:
       - ./aplicacion-web:/var/www/html
     ports:

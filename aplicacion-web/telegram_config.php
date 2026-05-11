@@ -3,11 +3,9 @@
  * Configuración de Telegram para notificaciones
  */
 
-// Sustituye con el token de tu bot de Telegram
-define('TELEGRAM_BOT_TOKEN', '8719535507:AAEeH0PJAhU3_AA9Bw3-Is4wWsKb_niB7Pw');
-
-// Sustituye con el ID del canal o grupo común
-define('TELEGRAM_CHAT_ID', '-1003926223594');
+// Se obtienen de las variables de entorno configuradas en Docker o .env
+define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN'));
+define('TELEGRAM_CHAT_ID', getenv('TELEGRAM_CHAT_ID'));
 
 /**
  * Función para enviar mensajes a Telegram
