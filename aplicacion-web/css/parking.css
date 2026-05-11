@@ -462,7 +462,9 @@ footer {
 .form-reporte .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
 }
 
 .form-reporte label {
@@ -470,7 +472,8 @@ footer {
     color: #455a64;
     font-size: 14px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    margin-left: 5px;
 }
 
 .form-reporte input[type="text"],

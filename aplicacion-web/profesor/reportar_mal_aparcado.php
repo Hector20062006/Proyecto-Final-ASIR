@@ -96,20 +96,22 @@ require '../header2.php';
         <form action="" method="POST" class="form-reporte">
             <div class="form-group">
                 <label for="matricula">Matrícula del Vehículo</label>
-                <input type="text" name="matricula" id="matricula" placeholder="Ej: 1234ABC" required>
+                <input type="text" name="matricula" id="matricula" placeholder="1234ABC" required>
             </div>
 
             <div class="form-group">
                 <label for="motivo">Motivo o Mensaje (Opcional)</label>
-                <textarea name="motivo" id="motivo" rows="3" placeholder="Ej: Está bloqueando mi salida..."></textarea>
+                <textarea name="motivo" id="motivo" rows="3" placeholder="Ej: Está bloqueando la salida del parking..."></textarea>
             </div>
 
-            <button type="submit" class="btn-reporte">
-                <i class="fab fa-telegram-plane"></i> ENVIAR AVISO A TELEGRAM
-            </button>
+            <div style="margin-top: 10px;">
+                <button type="submit" class="btn-reporte">
+                    <i class="fab fa-telegram-plane"></i> ENVIAR AVISO A TELEGRAM
+                </button>
+            </div>
             
             <a href="index.php" class="link-volver">
-                <i class="fas fa-arrow-left"></i> Volver al Panel
+                <i class="fas fa-arrow-left"></i> Volver al Panel de Control
             </a>
         </form>
     </div>
