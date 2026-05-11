@@ -15,6 +15,7 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 7. **Reporte de Mal Aparcado:** Sistema para que los profesores notifiquen vehículos mal estacionados mediante la matrícula.
 8. **Notificaciones en Tiempo Real:** Integración con la API de Telegram para enviar alertas automáticas al canal común del parking.
 9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
+10. **Auditoría de Intentos No Autorizados:** Registro automático de matrículas desconocidas detectadas por el OCR para supervisar posibles intrusiones.
 
 ## Estructura del Repositorio
 

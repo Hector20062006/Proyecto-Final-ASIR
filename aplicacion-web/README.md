@@ -26,6 +26,7 @@ La aplicación cuenta con carpetas independientes para segmentar la lógica y el
 *   **Finalidad:** Permite a los profesores notificar vehículos que estén obstaculizando el parking de forma manual.
 *   **Integración con Telegram:** El sistema identifica al dueño del vehículo por su matrícula y envía un aviso instantáneo al canal común de profesores a través de un Bot de Telegram. El mensaje incluye el propietario y un motivo opcional (ej: "bloqueando mi salida").
 *   **Gestión Administrativa:** El administrador cuenta con una vista específica (`admin/ver_incidencias.php`) para auditar todos estos reportes, pudiendo filtrar por matrícula, fecha o propietario.
+*   **Monitoreo de Intrusos (`admin/ver_intentos.php`):** Nueva sección dedicada a visualizar matrículas detectadas que no están en la base de datos, permitiendo identificar lecturas erróneas o intentos de acceso no permitidos.
 
 ### 4. API de Recepción de Hardware (`api_camara.php`)
 Es un archivo fundamental que actúa como puente de integración entre el **Contenedor de Visión Artificial (Python)** y la base de datos.
