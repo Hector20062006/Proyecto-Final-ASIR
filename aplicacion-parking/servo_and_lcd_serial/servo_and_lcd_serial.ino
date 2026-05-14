@@ -11,7 +11,11 @@ const int PIN_VERDE_ENTRADA = 3;
 const int PIN_ROJO_SALIDA = 4;
 const int PIN_VERDE_SALIDA = 5;
 
+const int PIN_SENSOR = 13;
+const int PIN_SENSOR_LED = 12;
+
 int lastAngle = 100; // Guardamos la última posición conocida
+int lastSensorState = -1;
 
 
 void setup() {
@@ -38,9 +42,27 @@ void setup() {
   digitalWrite(PIN_VERDE_ENTRADA, LOW);
   digitalWrite(PIN_ROJO_SALIDA, HIGH);
   digitalWrite(PIN_VERDE_SALIDA, LOW);
+
+  pinMode(PIN_SENSOR, INPUT_PULLUP);
+  pinMode(PIN_SENSOR_LED, OUTPUT);
 }
 
 void loop() {
+  // 1. Lectura del sensor de aparcamiento
+  int currentSensorState = digitalRead(PIN_SENSOR);
+  if (currentSensorState != lastSensorState) {
+    if (currentSensorState == LOW) {
+      digitalWrite(PIN_SENSOR_LED, HIGH); // Coche tocando
+      Serial.println("SENSOR|BIEN");
+    } else {
+      digitalWrite(PIN_SENSOR_LED, LOW);  // Coche no tocando
+      Serial.println("SENSOR|MAL");
+    }
+    lastSensorState = currentSensorState;
+    delay(50); // Pequeño delay para evitar rebotes (debounce)
+  }
+
+  // 2. Comprobar si hay comandos de Python
   if (!Serial.available()) return;
 
   String msg = Serial.readStringUntil('\n');

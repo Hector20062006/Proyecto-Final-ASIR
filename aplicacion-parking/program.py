@@ -453,6 +453,29 @@ def bucle_camara(ser, cap, roi, nombre_cam):
         time.sleep(0.3)  # ~3 lecturas por segundo por cámara en paralelo
 
 
+def bucle_lectura_arduino(ser):
+    """Hilo independiente que lee los datos que envía el Arduino (sensores)."""
+    log_mensaje("Sensor", "Hilo de lectura del Arduino iniciado.")
+    # Evitar bloqueos de lectura
+    ser.timeout = 0.5 
+    while True:
+        try:
+            linea = ser.readline()
+            if linea:
+                texto = linea.decode('utf-8', errors='ignore').strip()
+                if texto.startswith("SENSOR|"):
+                    estado = texto.split("|")[1]
+                    if estado == "BIEN":
+                        log_mensaje("Sensor", "ESTADO: Coche BIEN aparcado en la plaza.")
+                        # TODO: Lógica para registrar buen aparcamiento si fuera necesario
+                    elif estado == "MAL":
+                        log_mensaje("Sensor", "ESTADO: Plaza VACÍA o coche MAL aparcado.")
+                        # TODO: Lógica para lanzar alerta de Telegram
+        except Exception as e:
+            log_mensaje("Sensor", f"Error leyendo del puerto serie: {e}")
+            time.sleep(1)
+
+
 def main():
     ser = serial.Serial(PUERTO, BAUDIOS, timeout=1)
     time.sleep(2.5)
@@ -487,14 +510,19 @@ def main():
     # Lanzar las dos cámaras en hilos independientes (procesamiento paralelo)
     hilo_cam0 = threading.Thread(target=bucle_camara, args=(ser, cam0, ROI_CAM0, "Cámara 0"), daemon=True)
     hilo_cam2 = threading.Thread(target=bucle_camara, args=(ser, cam2, ROI_CAM2, "Cámara 2"), daemon=True)
+    
+    # Lanzar el hilo de lectura del sensor (Arduino)
+    hilo_sensor = threading.Thread(target=bucle_lectura_arduino, args=(ser,), daemon=True)
 
     hilo_cam0.start()
     hilo_cam2.start()
-    log_mensaje("Sistema", "Ambas cámaras activas en modo paralelo.")
+    hilo_sensor.start()
+    log_mensaje("Sistema", "Cámaras y sensor activos en modo paralelo.")
 
     # Mantener el hilo principal vivo
     hilo_cam0.join()
     hilo_cam2.join()
+    hilo_sensor.join()
 
 
 if __name__ == "__main__":
