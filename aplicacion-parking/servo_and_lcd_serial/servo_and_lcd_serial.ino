@@ -12,7 +12,8 @@ const int PIN_ROJO_SALIDA = 4;
 const int PIN_VERDE_SALIDA = 5;
 
 const int PIN_SENSOR = 13;
-const int PIN_SENSOR_LED = 12;
+const int PIN_SENSOR_LED_ROJO = 12; // Asumiendo que el 12 es rojo/vacío
+const int PIN_SENSOR_LED_VERDE = 11; // El nuevo verde que mencionas
 
 int lastAngle = 100; // Guardamos la última posición conocida
 int lastSensorState = -1;
@@ -44,7 +45,8 @@ void setup() {
   digitalWrite(PIN_VERDE_SALIDA, LOW);
 
   pinMode(PIN_SENSOR, INPUT_PULLUP);
-  pinMode(PIN_SENSOR_LED, OUTPUT);
+  pinMode(PIN_SENSOR_LED_ROJO, OUTPUT);
+  pinMode(PIN_SENSOR_LED_VERDE, OUTPUT);
 }
 
 void loop() {
@@ -52,10 +54,14 @@ void loop() {
   int currentSensorState = digitalRead(PIN_SENSOR);
   if (currentSensorState != lastSensorState) {
     if (currentSensorState == LOW) {
-      digitalWrite(PIN_SENSOR_LED, HIGH); // Coche tocando
+      // Coche tocando (Aparcado) -> Encendemos Rojo, Apagamos Verde
+      digitalWrite(PIN_SENSOR_LED_VERDE, LOW); 
+      digitalWrite(PIN_SENSOR_LED_ROJO, HIGH); 
       Serial.println("SENSOR|BIEN");
     } else {
-      digitalWrite(PIN_SENSOR_LED, LOW);  // Coche no tocando
+      // Coche no tocando (Vacío) -> Encendemos Verde, Apagamos Rojo
+      digitalWrite(PIN_SENSOR_LED_VERDE, HIGH);  
+      digitalWrite(PIN_SENSOR_LED_ROJO, LOW);  
       Serial.println("SENSOR|MAL");
     }
     lastSensorState = currentSensorState;

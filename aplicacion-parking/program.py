@@ -108,6 +108,10 @@ _estado_camaras = {
 VOTOS_NECESARIOS = 2  # La matrícula debe leerse N veces seguidas antes de procesarse
 _serial_lock = threading.Lock()  # Lock para el puerto serie (solo un hilo a la vez)
 
+# Variables globales para control de aparcamiento
+_coche_pendiente = {"matricula": None, "tiempo_entrada": 0}
+_parking_lock = threading.Lock()
+
 
 def enviar(ser, angulo, linea1, linea2="", estado_led="0"):
     with _serial_lock:
@@ -426,6 +430,14 @@ def procesar_matricula(ser, matricula, origen):
     log_mensaje("Autorización", f"OK - La matrícula {matricula} ({nombre}) está AUTORIZADA.")
     enviar(ser, CERRADA, "Matricula OK", matricula[:16])
     registrar_acceso(matricula, origen)
+    
+    global _coche_pendiente
+    if es_entrada:
+        with _parking_lock:
+            _coche_pendiente["matricula"] = matricula
+            _coche_pendiente["tiempo_entrada"] = time.time()
+            log_mensaje("Sensor", f"Iniciado temporizador de aparcamiento para {matricula}")
+
     time.sleep(2)
     abrir_barrera(ser, origen, nombre)
 
@@ -467,13 +479,36 @@ def bucle_lectura_arduino(ser):
                     estado = texto.split("|")[1]
                     if estado == "BIEN":
                         log_mensaje("Sensor", "ESTADO: Coche BIEN aparcado en la plaza.")
-                        # TODO: Lógica para registrar buen aparcamiento si fuera necesario
+                        with _parking_lock:
+                            if _coche_pendiente["matricula"]:
+                                log_mensaje("Sensor", f"Matrícula {_coche_pendiente['matricula']} ha aparcado correctamente dentro del tiempo.")
+                                _coche_pendiente["matricula"] = None
                     elif estado == "MAL":
                         log_mensaje("Sensor", "ESTADO: Plaza VACÍA o coche MAL aparcado.")
-                        # TODO: Lógica para lanzar alerta de Telegram
         except Exception as e:
             log_mensaje("Sensor", f"Error leyendo del puerto serie: {e}")
             time.sleep(1)
+
+
+def monitor_aparcamiento():
+    """Hilo que vigila si un coche tarda demasiado en aparcar."""
+    log_mensaje("Monitor", "Hilo de monitorización de aparcamiento iniciado.")
+    TIEMPO_LIMITE = 15 # 15 segundos para pruebas (luego cambiar a 300 para 5 mins)
+    while True:
+        with _parking_lock:
+            mat = _coche_pendiente["matricula"]
+            t_entrada = _coche_pendiente["tiempo_entrada"]
+            
+        if mat is not None:
+            if (time.time() - t_entrada) > TIEMPO_LIMITE:
+                log_mensaje("Alerta", f"¡ATENCIÓN! La matrícula {mat} NO ha aparcado o está MAL aparcada (han pasado {TIEMPO_LIMITE}s).")
+                # TODO: Aquí puedes llamar a una función para enviar mensaje a Telegram
+                
+                # Limpiamos para no spamear la alerta infinitamente
+                with _parking_lock:
+                    if _coche_pendiente["matricula"] == mat:
+                        _coche_pendiente["matricula"] = None
+        time.sleep(5)
 
 
 def main():
@@ -513,16 +548,21 @@ def main():
     
     # Lanzar el hilo de lectura del sensor (Arduino)
     hilo_sensor = threading.Thread(target=bucle_lectura_arduino, args=(ser,), daemon=True)
+    
+    # Lanzar hilo de monitorización de tiempos
+    hilo_monitor = threading.Thread(target=monitor_aparcamiento, daemon=True)
 
     hilo_cam0.start()
     hilo_cam2.start()
     hilo_sensor.start()
-    log_mensaje("Sistema", "Cámaras y sensor activos en modo paralelo.")
+    hilo_monitor.start()
+    log_mensaje("Sistema", "Cámaras, sensor y monitor activos en modo paralelo.")
 
     # Mantener el hilo principal vivo
     hilo_cam0.join()
     hilo_cam2.join()
     hilo_sensor.join()
+    hilo_monitor.join()
 
 
 if __name__ == "__main__":
