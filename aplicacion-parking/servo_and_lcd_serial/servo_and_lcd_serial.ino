@@ -57,12 +57,12 @@ void loop() {
       // Coche tocando (Aparcado) -> Encendemos Rojo, Apagamos Verde
       digitalWrite(PIN_SENSOR_LED_VERDE, LOW); 
       digitalWrite(PIN_SENSOR_LED_ROJO, HIGH); 
-      Serial.println("SENSOR|BIEN");
+      Serial.println("SENSOR|1|BIEN");
     } else {
       // Coche no tocando (Vacío) -> Encendemos Verde, Apagamos Rojo
       digitalWrite(PIN_SENSOR_LED_VERDE, HIGH);  
       digitalWrite(PIN_SENSOR_LED_ROJO, LOW);  
-      Serial.println("SENSOR|MAL");
+      Serial.println("SENSOR|1|MAL");
     }
     lastSensorState = currentSensorState;
     delay(50); // Pequeño delay para evitar rebotes (debounce)

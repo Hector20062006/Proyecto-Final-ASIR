@@ -476,15 +476,18 @@ def bucle_lectura_arduino(ser):
             if linea:
                 texto = linea.decode('utf-8', errors='ignore').strip()
                 if texto.startswith("SENSOR|"):
-                    estado = texto.split("|")[1]
+                    partes = texto.split("|")
+                    plaza = partes[1]
+                    estado = partes[2]
+                    
                     if estado == "BIEN":
-                        log_mensaje("Sensor", "ESTADO: Coche BIEN aparcado en la plaza.")
+                        log_mensaje("Sensor", f"ESTADO: Coche BIEN aparcado en la Plaza {plaza}.")
                         with _parking_lock:
                             if _coche_pendiente["matricula"]:
-                                log_mensaje("Sensor", f"Matrícula {_coche_pendiente['matricula']} ha aparcado correctamente dentro del tiempo.")
+                                log_mensaje("Sensor", f"Matrícula {_coche_pendiente['matricula']} ha aparcado correctamente en la Plaza {plaza}.")
                                 _coche_pendiente["matricula"] = None
                     elif estado == "MAL":
-                        log_mensaje("Sensor", "ESTADO: Plaza VACÍA o coche MAL aparcado.")
+                        log_mensaje("Sensor", f"ESTADO: Plaza {plaza} VACÍA o coche MAL aparcado.")
         except Exception as e:
             log_mensaje("Sensor", f"Error leyendo del puerto serie: {e}")
             time.sleep(1)
