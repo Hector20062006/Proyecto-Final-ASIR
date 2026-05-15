@@ -19,8 +19,8 @@ El flujo de trabajo y la estructura del proyecto se dividen en los siguientes co
 ### 2. Paneles por Rol (Directorios Aislados)
 La aplicación cuenta con carpetas independientes para segmentar la lógica y el acceso según el rol:
 *   📁 **`admin/`**: Panel de control total. Permite la administración integral del sistema, gestión de usuarios, auditoría completa de los registros de entrada y salida, etc.
-*   📁 **`profesor/`**: Panel para personal docente. Les permite gestionar sus propios vehículos y revisar el historial de sus accesos.
-*   📁 **`alumno/`**: Panel básico para el alumnado. Similar al del profesor, restringido a visualizar sus datos y estado de acceso.
+*   📁 **`profesor/`**: Panel para personal docente. Permite gestionar vehículos, ver historial de accesos y consultar la **disponibilidad de plazas** en tiempo real.
+*   📁 **`alumno/`**: Panel básico para el alumnado. Similar al del profesor, restringido a visualizar sus datos, estado de acceso y **aforo del parking**.
 
 ### 3. Sistema de Reporte de Mal Aparcado (`profesor/reportar_mal_aparcado.php`)
 *   **Finalidad:** Permite a los profesores notificar vehículos que estén obstaculizando el parking de forma manual.

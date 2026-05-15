@@ -16,6 +16,7 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 8. **Notificaciones en Tiempo Real:** Integración con la API de Telegram para enviar alertas automáticas al canal común del parking.
 9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
 10. **Auditoría de Intentos No Autorizados:** Registro automático de matrículas desconocidas detectadas por el OCR para supervisar posibles intrusiones.
+11. **Gestión de Ocupación en Tiempo Real:** Cálculo automático de plazas libres y ocupadas basado en el flujo de entradas y salidas registrado en la base de datos.
 
 ## Estructura del Repositorio
 

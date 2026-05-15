@@ -49,7 +49,13 @@ El sistema consulta la tabla `accesos` en la base de datos para conocer el **úl
 #### 5. 🛡️ Robustez y Auto-inicialización
 El script incluye una capa de seguridad para la base de datos: antes de registrar cualquier intento denegado, verifica la existencia de la tabla necesaria y la crea automáticamente si no existe. Esto evita fallos críticos ante una base de datos recién instalada.
 
-#### 6. 💬 Mensajes Personalizados en LCD
+#### 6. 📊 Gestión de Aforo y Plazas
+El sistema realiza un seguimiento dinámico de la ocupación:
+- **Contador Virtual**: Basado en la diferencia entre registros de `ENTRADA` y `SALIDA` en la base de datos.
+- **Control de Aforo**: Capacidad de denegar la entrada si el número de vehículos dentro alcanza el límite máximo de plazas del recinto.
+- **Feedback al Usuario**: La pantalla LCD puede informar sobre la disponibilidad de plazas libres antes de que el conductor inicie el proceso de validación.
+
+#### 7. 💬 Mensajes Personalizados en LCD
 
 El sistema diferencia la secuencia de mensajes según la dirección del movimiento:
 
