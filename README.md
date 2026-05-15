@@ -59,5 +59,12 @@ Para el correcto funcionamiento de las notificaciones de Telegram, el sistema ut
 2. Edita el archivo `.env` e introduce tu `TELEGRAM_BOT_TOKEN` y tu `TELEGRAM_CHAT_ID`.
 3. El archivo `.env` está protegido por el `.gitignore` para asegurar que tus tokens nunca se suban al repositorio público.
 
+## 🛠️ Robustez y Auto-reparación
+
+Una de las características clave de este proyecto es su capacidad de **auto-configuración**:
+*   **Inicialización de Base de Datos:** Tanto la aplicación web como el motor de Python detectan automáticamente si faltan tablas críticas (como las de incidencias o intentos denegados) y las crean al vuelo.
+*   **Gestión de Red:** La Raspberry Pi muestra su IP al arrancar para que el administrador siempre sepa dónde conectarse sin necesidad de un monitor externo.
+*   **Despliegue Continuo (CI/CD):** El sistema se actualiza automáticamente desde GitHub, incluyendo el flasheo del firmware del Arduino.
+
 ---
 *Autores: Imad y Hector*

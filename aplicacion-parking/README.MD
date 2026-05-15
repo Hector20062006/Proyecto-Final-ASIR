@@ -40,13 +40,16 @@ Para evitar que un frame borroso o texto similar a una matrícula dispare la bar
 
 El sistema consulta la tabla `accesos` en la base de datos para conocer el **último movimiento** de cada vehículo:
 
-| Situación | Resultado | Mensaje en LCD |
-|---|---|---|
-| Intenta **entrar** pero su última acción fue ENTRADA | **Bloqueado** | `Ya en parking / No puede entrar` |
-| Intenta **salir** pero su última acción NO fue ENTRADA | **Bloqueado** | `No esta dentro / No puede salir` |
-| Estado correcto y matrícula autorizada | **Acceso permitido** | Secuencia de bienvenida/despedida |
+| Situación | Resultado | Mensaje en LCD | Registro en BD |
+|---|---|---|---|
+| Matrícula autorizada y estado OK | **Acceso permitido** | Secuencia bienvenida/despedida | Tabla `accesos` |
+| Matrícula autorizada pero estado mal | **Bloqueado** | `Ya en parking` / `No esta dentro` | Solo Log |
+| **Matrícula NO autorizada** | **DENEGADO** | `Matricula NO` / `Acceso denegado` | Tabla `intentos_denegados` |
 
-#### 5. 💬 Mensajes Personalizados en LCD
+#### 5. 🛡️ Robustez y Auto-inicialización
+El script incluye una capa de seguridad para la base de datos: antes de registrar cualquier intento denegado, verifica la existencia de la tabla necesaria y la crea automáticamente si no existe. Esto evita fallos críticos ante una base de datos recién instalada.
+
+#### 6. 💬 Mensajes Personalizados en LCD
 
 El sistema diferencia la secuencia de mensajes según la dirección del movimiento:
 
