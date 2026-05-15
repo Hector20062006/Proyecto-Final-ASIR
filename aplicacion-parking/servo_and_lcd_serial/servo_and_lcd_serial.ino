@@ -12,8 +12,8 @@ const int PIN_ROJO_SALIDA = 4;
 const int PIN_VERDE_SALIDA = 5;
 
 const int PIN_SENSOR = 13;
-const int PIN_SENSOR_LED_ROJO = 12; // Asumiendo que el 12 es rojo/vacío
-const int PIN_SENSOR_LED_VERDE = 11; // El nuevo verde que mencionas
+const int PIN_SENSOR_LED_ROJO = 12;
+const int PIN_SENSOR_LED_VERDE = 11; 
 
 int lastAngle = 100; // Guardamos la última posición conocida
 int lastSensorState = -1;
