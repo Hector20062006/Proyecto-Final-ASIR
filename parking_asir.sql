@@ -193,6 +193,15 @@ CREATE TABLE IF NOT EXISTS `intentos_denegados` (
   PRIMARY KEY (`id_intento`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `plazas` (
+  `id_plaza` int(11) NOT NULL,
+  `estado` enum('libre','ocupada') DEFAULT 'libre',
+  `ultima_actualizacion` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_plaza`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `plazas` (`id_plaza`, `estado`) VALUES (1, 'libre');
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

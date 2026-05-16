@@ -116,6 +116,7 @@ $res_vehi = mysqli_query($conexion, $sql_vehi);
     </div>
 
     <div style="margin-top: 30px; text-align: center;">
+        <a href="plazas.php"><button style=" background-color: #34495e;">Plazas disponibles</button></a>
         <a href="../logout.php"><button style="background-color: var(--color-peligro);">Cerrar Sesión</button></a>
     </div>
 </div>

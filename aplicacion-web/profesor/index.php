@@ -85,6 +85,7 @@ $res_vehi = mysqli_query($conexion, $sql_vehi);
         </div>
     </div>
     <a href="editar_vehiculo.php"><button style="font-size: 12px; padding: 5px 10px; background-color: #34495e;">Cambiar Coche</button></a>
+    <a href="plazas.php"><button style=" background-color: #34495e;">Plazas disponibles</button></a>
 
     <div style="margin-top: 40px;">
         <h3><i class="fas fa-history"></i> Mis Últimos Accesos al Parking</h3>

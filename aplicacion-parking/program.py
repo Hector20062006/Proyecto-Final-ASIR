@@ -19,6 +19,17 @@ BAUDIOS = 9600
 CERRADA = 100
 ABIERTA = 10
 
+def actualizar_plaza(id_plaza, estado):
+    try:
+        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO plazas (id_plaza, estado) VALUES (%s, %s) ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=NOW()", (id_plaza, estado, estado))
+        conn.commit()
+        conn.close()
+        log_mensaje("Sensor", f"Plaza {id_plaza} actualizada a {estado}")
+    except mysql.connector.Error as err:
+        log_mensaje("Base de Datos", f"Error al actualizar plaza: {err}")
+
 def es_matricula_autorizada(matricula):
     try:
         conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
@@ -482,12 +493,14 @@ def bucle_lectura_arduino(ser):
                     
                     if estado == "BIEN":
                         log_mensaje("Sensor", f"ESTADO: Coche BIEN aparcado en la Plaza {plaza}.")
+                        actualizar_plaza(int(plaza), "ocupada")
                         with _parking_lock:
                             if _coche_pendiente["matricula"]:
                                 log_mensaje("Sensor", f"Matrícula {_coche_pendiente['matricula']} ha aparcado correctamente en la Plaza {plaza}.")
                                 _coche_pendiente["matricula"] = None
                     elif estado == "MAL":
                         log_mensaje("Sensor", f"ESTADO: Plaza {plaza} VACÍA o coche MAL aparcado.")
+                        actualizar_plaza(int(plaza), "libre")
         except Exception as e:
             log_mensaje("Sensor", f"Error leyendo del puerto serie: {e}")
             time.sleep(1)
