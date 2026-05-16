@@ -21,8 +21,8 @@ services:
 
   web:
     build: 
-      context: ./aplicacion-web
-      dockerfile: ../docker/web/Dockerfile
+      context: .
+      dockerfile: docker/web/Dockerfile
     pull_policy: build
     container_name: web_php
     restart: always
