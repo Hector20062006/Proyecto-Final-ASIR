@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS `plazas` (
   PRIMARY KEY (`id_plaza`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `plazas` (`id_plaza`, `estado`) VALUES (1, 'libre');
+INSERT INTO `plazas` (`id_plaza`, `estado`) VALUES (1, 'libre'), (2, 'libre'), (3, 'libre');
 
 COMMIT;
 
