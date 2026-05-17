@@ -28,3 +28,8 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Certbot / SSL
+docker/web/ssl/
+certbot_conf/
+certbot_www/

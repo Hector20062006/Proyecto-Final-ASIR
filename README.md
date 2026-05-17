@@ -17,6 +17,8 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
 10. **Auditoría de Intentos No Autorizados:** Registro automático de matrículas desconocidas detectadas por el OCR para supervisar posibles intrusiones.
 11. **Gestión de Ocupación en Tiempo Real:** Cálculo automático de plazas libres y ocupadas basado en el flujo de entradas y salidas registrado en la base de datos.
+12. **Sensores Físicos de Aparcamiento:** Integración de microinterruptores que detectan en tiempo real si un vehículo está bien o mal aparcado en su plaza.
+13. **Monitorización de Tiempos:** Un temporizador interno vigila que el vehículo aparque correctamente dentro de un tiempo límite, generando alertas en caso contrario.
 
 ## Estructura del Repositorio
 
@@ -32,7 +34,7 @@ El repositorio se divide para separar la funcionalidad técnica de la documentac
 En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las siguientes ramas:
 * **Sistemas Operativos:** Uso de automatismos en Linux y GitHub Actions para la descarga y ejecución de dependencias, y el flasheo automático del código de Arduino.
 * **Fundamentos de Programación:** Desarrollo de la lógica central en Python con programación concurrente (threading) y programación de hardware en C++.
-* **Hardware y Redes:** Intercomunicación del puerto Serial, control de 4 LEDs (semáforos de entrada y salida), display LCD I2C y servomotor para la barrera.
+* **Hardware y Redes:** Intercomunicación del puerto Serial, control de 4 LEDs (semáforos de entrada y salida), display LCD I2C, servomotor para la barrera y microinterruptores mecánicos para las plazas.
 * **Bases de Datos:** Almacenamiento, persistencia y consulta de estado en un SGBD relacional (MySQL/MariaDB).
 * **Implantación de Aplicaciones Web:** Programación de interfaces y backend con PHP, HTML5 y CSS3.
 * **Despliegue con Contenedores:** Orquestación de servicios (Base de datos, API Python y Web PHP) mediante Docker y Docker Compose, junto con CI/CD de despliegue continuo.

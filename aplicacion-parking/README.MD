@@ -4,7 +4,7 @@ Esta carpeta contiene el cerebro del sistema de control de barreras. Aquí se al
 
 ## 🧠 El Archivo Principal: `program.py`
 
-El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma continua analizando vídeo en tiempo real desde dos cámaras simultáneas procesadas en **hilos paralelos independientes**.
+El archivo `program.py` es el núcleo central del proyecto. Se ejecuta de forma continua analizando vídeo en tiempo real desde dos cámaras simultáneas, y controla la lectura de sensores mediante el uso de múltiples **hilos paralelos independientes**.
 
 ---
 
@@ -25,9 +25,11 @@ El sistema utiliza una pipeline de varias etapas para maximizar la precisión de
 
 #### 2. ⚡ Procesamiento Paralelo (Threading)
 
-Las dos cámaras funcionan en **hilos independientes** (`threading.Thread`):
+Las dos cámaras y los sistemas de monitoreo funcionan en **hilos independientes** (`threading.Thread`):
 - **Cámara 0:** Cámara de **ENTRADA** → ~3 lecturas/segundo.
 - **Cámara 2:** Cámara de **SALIDA** → ~3 lecturas/segundo.
+- **Sensor:** Hilo dedicado a escuchar los mensajes del Arduino sobre el estado de las plazas.
+- **Monitor:** Hilo temporizador que vigila que los coches no tarden más de 15 segundos en aparcar correctamente.
 - El acceso al puerto serie (Arduino) está protegido con `threading.Lock()` para evitar conflictos entre hilos.
 
 #### 3. 🗳️ Sistema de Votos (Anti-Falsos Positivos)
@@ -68,24 +70,34 @@ El sistema diferencia la secuencia de mensajes según la dirección del movimien
 | 5 (paso) | `Puede pasar` | `Buen viaje!` |
 | 6 (cierre) | `Cerrando / Espere` | `Cerrando / Espere` |
 
-#### 6. 🌐 Secuencia de Inicio y Red
+#### 8. 🌐 Secuencia de Inicio y Red
 
 Al arrancar el contenedor, el sistema detecta automáticamente la IP física de la Raspberry Pi y la muestra en la pantalla LCD durante **60 segundos**, facilitando el acceso remoto sin periféricos externos.
 
-#### 7. 📋 Sistema de Logs
+#### 9. 📋 Sistema de Logs
 
 Todo se registra con fecha y hora exactas mediante `log_mensaje()`, con `flush=True` para visualización en tiempo real:
 ```bash
 docker logs -f python_app
 ```
 
+#### 10. 🚨 Sensores de Plaza y Monitorización
+El sistema lee continuamente por puerto serial (`bucle_lectura_arduino`) el estado de sensores físicos instalados en las plazas (`SENSOR|plaza|estado`). Actualiza en tiempo real la base de datos como "ocupada" o "libre" y dispone de un temporizador (`monitor_aparcamiento`) que envía alertas si un coche tarda demasiado en estacionar tras pasar la barrera.
+
 ---
 
 ## 📡 Protocolo Serial (Comunicación con Arduino)
 
-El formato de comando enviado al Arduino es:
+El formato de comandos es bidireccional:
+
+**Envío al Arduino:**
 ```
 ángulo|línea_lcd_1|línea_lcd_2|estado_led\n
+```
+
+**Recepción desde el Arduino (Sensores):**
+```
+SENSOR|id_plaza|estado (BIEN o MAL)\n
 ```
 
 | Parámetro | Valores |

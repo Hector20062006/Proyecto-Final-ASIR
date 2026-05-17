@@ -8,6 +8,12 @@ import datetime
 import socket
 import numpy as np
 import threading
+import os
+
+DB_HOST = os.environ.get("DB_HOST", "db")
+DB_USER = os.environ.get("DB_USER", "root")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "root")
+DB_NAME = os.environ.get("DB_NAME", "parking_ASIR")
 
 def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -21,7 +27,7 @@ ABIERTA = 10
 
 def actualizar_plaza(id_plaza, estado):
     try:
-        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         cursor.execute("INSERT INTO plazas (id_plaza, estado) VALUES (%s, %s) ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=NOW()", (id_plaza, estado, estado))
         conn.commit()
@@ -32,7 +38,7 @@ def actualizar_plaza(id_plaza, estado):
 
 def es_matricula_autorizada(matricula):
     try:
-        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         # Buscamos el nombre del usuario asociado a esa matrícula
         query = """
@@ -54,7 +60,7 @@ def es_matricula_autorizada(matricula):
 
 def registrar_acceso(matricula, origen):
     try:
-        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         # Si viene de la Cámara 0 es ENTRADA, si es la 2 es SALIDA
         movimiento = "ENTRADA" if "0" in origen else "SALIDA"
@@ -68,7 +74,7 @@ def registrar_acceso(matricula, origen):
 
 def registrar_intento_denegado(matricula, origen):
     try:
-        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         
         # Asegurar que la tabla existe antes de insertar
@@ -92,7 +98,7 @@ def registrar_intento_denegado(matricula, origen):
 def obtener_ultimo_movimiento(matricula):
     """Devuelve 'ENTRADA', 'SALIDA' o None si no hay registros."""
     try:
-        conn = mysql.connector.connect(host="db", user="root", password="root", database="parking_ASIR")
+        conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT tipo_movimiento FROM accesos WHERE matricula = %s ORDER BY fecha_hora DESC LIMIT 1",
