@@ -37,7 +37,6 @@ services:
     volumes:
       - ./aplicacion-web:/var/www/html
       - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"
@@ -46,16 +45,25 @@ services:
         condition: service_healthy
 
   certbot:
-    image: certbot/certbot
+    image: certbot/dns-cloudflare
     container_name: certbot
     restart: always
     volumes:
       - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot certonly --webroot -w /var/www/certbot -d $${DOMAIN_NAME} --email $${CERTBOT_EMAIL} --agree-tos --no-eff-email --keep-until-expiring; sleep 12h & wait $${!}; done;'"
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    entrypoint: >
+      /bin/sh -c '
+      mkdir -p /secrets &&
+      echo "dns_cloudflare_api_token = $${CLOUDFLARE_API_TOKEN}" > /secrets/cloudflare.ini &&
+      chmod 600 /secrets/cloudflare.ini &&
+      trap exit TERM;
+      while :; do
+        certbot certonly --dns-cloudflare --dns-cloudflare-credentials /secrets/cloudflare.ini -d $${DOMAIN_NAME} --email $${CERTBOT_EMAIL} --agree-tos --no-eff-email --keep-until-expiring;
+        sleep 12h & wait $${!};
+      done;'
 
   python_app:
     build: 
@@ -85,4 +93,3 @@ services:
 volumes:
   db_data:
   certbot_conf:
-  certbot_www:
