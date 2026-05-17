@@ -41,33 +41,42 @@ En el desarrollo y conceptualización de este proyecto de ASIR se han tocado las
 
 ## 🚀 Despliegue Rápido con Docker
 
-El proyecto cuenta con una configuración completa mediante **Docker Compose**. Puedes levantar todo el entorno de desarrollo y pruebas con un solo comando:
+El proyecto cuenta con una configuración completa mediante **Docker Orquestado**. Puedes levantar todo el entorno de desarrollo y producción seguro con un solo comando:
 
 ```bash
 docker compose up -d
 ```
 
-Esto levantará los siguientes servicios:
+Esto levantará los siguientes servicios en paralelo:
 1. **db**: Contenedor MySQL 8.0 con la base de datos `parking_ASIR`.
-2. **python_app**: Contenedor que ejecuta el procesamiento de imágenes (OpenCV + Tesseract) en paralelo para ambas cámaras, y se conecta directamente a la base de datos para la validación de matrículas.
-3. **web**: Contenedor con el servidor web para la interfaz gráfica de administración en PHP (Puerto 80).
+2. **python_app**: Contenedor que ejecuta el procesamiento de imágenes (OpenCV + Tesseract) y la lógica de hardware, con detección dinámica de puertos USB del Arduino.
+3. **web**: Contenedor Apache con PHP, configurado con soporte nativo de SSL/TLS (Puerto 443).
+4. **certbot**: Contenedor de renovación de Let's Encrypt integrado con la API de Cloudflare para validación DNS-01 automática.
 
-*(Puedes acceder a la aplicación web navegando a `http://localhost` en tu navegador).*
+*(Puedes acceder a la aplicación web de forma segura en `https://tu-dominio.com` o a través del subdominio configurado).*
 
-## 🔐 Configuración y Seguridad
+## 🔐 Configuración y Seguridad (HTTPS y APIs)
 
-Para el correcto funcionamiento de las notificaciones de Telegram, el sistema utiliza variables de entorno. Sigue estos pasos para configurarlo:
+El sistema está completamente securizado y utiliza variables de entorno centralizadas. Sigue estos pasos para configurarlo:
 
 1. Copia el archivo de ejemplo: `cp .env.example .env`
-2. Edita el archivo `.env` e introduce tu `TELEGRAM_BOT_TOKEN` y tu `TELEGRAM_CHAT_ID`.
-3. El archivo `.env` está protegido por el `.gitignore` para asegurar que tus tokens nunca se suban al repositorio público.
+2. Edita el archivo `.env` e introduce las credenciales correspondientes:
+   * **Telegram:** `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` para alertas automáticas.
+   * **Base de Datos:** Credenciales seguras para MySQL (`DB_PASSWORD`, `DB_NAME`, etc.).
+   * **SSL/TLS (Cloudflare):**
+     * `DOMAIN_NAME`: Tu dominio o subdominio apuntando al servidor (soporta wildcards como `*.dominio.com`).
+     * `CERTBOT_EMAIL`: Tu correo de registro para las alertas de Let's Encrypt.
+     * `CLOUDFLARE_API_TOKEN`: Tu token de API con permisos de edición DNS en la zona de tu dominio.
+3. El archivo `.env` está protegido por el `.gitignore` para asegurar la total privacidad de tus claves.
 
-## 🛠️ Robustez y Auto-reparación
+## 🛠️ Robustez, Auto-reparación y HTTPS Inteligente
 
-Una de las características clave de este proyecto es su capacidad de **auto-configuración**:
-*   **Inicialización de Base de Datos:** Tanto la aplicación web como el motor de Python detectan automáticamente si faltan tablas críticas (como las de incidencias o intentos denegados) y las crean al vuelo.
-*   **Gestión de Red:** La Raspberry Pi muestra su IP al arrancar para que el administrador siempre sepa dónde conectarse sin necesidad de un monitor externo.
-*   **Despliegue Continuo (CI/CD):** El sistema se actualiza automáticamente desde GitHub, incluyendo el flasheo del firmware del Arduino.
+Una de las características clave de este proyecto de fin de ciclo es su resiliencia y diseño auto-reparable:
+*   **Arranque Seguro Sincronizado:** El contenedor web de Apache detecta si es la primera vez que se monta y espera automáticamente en bucle a que Certbot valide el dominio y descargue las firmas antes de iniciar la interfaz web. Cero fallos de arranque SSL.
+*   **Validación DNS-01 (Sin Puertos Abiertos):** Al usar la API de Cloudflare para validar la propiedad del dominio, **no es necesario abrir el puerto 80 en tu router**, superando cualquier restricción de red de grado escolar o IPs locales de la Raspberry Pi.
+*   **Gestión Dinámica de Hardware:** El script Python detecta dinámicamente el puerto USB asignado al Arduino. Ya no se rompe el despliegue al cambiar el hardware de puerto USB.
+*   **Auto-inicialización de Base de Datos:** Tanto el backend web como el módulo Python crean las tablas necesarias al vuelo si no existen.
+*   **Despliegue Continuo (CI/CD):** Actualizaciones integradas mediante GitHub Actions para una entrega de software robusta.
 
 ---
 *Autores: Imad y Hector*

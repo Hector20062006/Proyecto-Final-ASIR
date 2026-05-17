@@ -117,20 +117,28 @@ SENSOR|id_plaza|estado (BIEN o MAL)\n
 
 ---
 
-## 🐳 Instrucciones de Despliegue
+## 🐳 Instrucciones de Despliegue y Conectividad Dinámica
+
+### 🔌 Autodetección Dinámica del Puerto Serie
+El módulo central de Python (`program.py`) cuenta con un **sistema de escaneo inteligente de puertos serie** utilizando la librería `serial.tools.list_ports`. 
+- **Ya no es necesario configurar puertos fijos** (`/dev/ttyACM0` o `COM3`).
+- El script examina automáticamente todos los puertos USB activos del sistema (tanto en Linux/Raspberry Pi como en Windows) e identifica en cuál está conectado el Arduino de forma autónoma.
+- Si el Arduino cambia de puerto físico en la Raspberry Pi, el script se adaptará automáticamente sin necesidad de modificar el código ni reconstruir el contenedor.
 
 ### CI/CD Automático (GitHub Actions)
-Cualquier push a `main` disparará el flujo de trabajo que compilará y flasheará el Arduino en la Raspberry Pi automáticamente.
+Cualquier push a `main` disparará el flujo de trabajo que detiene procesos serie activos, limpia la memoria flash del Arduino subiéndole un sketch vacío, compila el código productivo y flashea el firmware real en la Raspberry Pi de forma automatizada.
 
 ### Despliegue Docker (Recomendado)
+El servicio `python_app` se despliega integrado con la base de datos MySQL:
 ```bash
 docker compose up -d
 ```
-Requiere modo privilegiado (`privileged: true`) y mapeo de dispositivos de hardware en `docker-compose.yml`.
+> **Nota de Seguridad:** Se ha eliminado la directiva estática `devices` de la configuración de Docker Compose. En su lugar, el contenedor se ejecuta con `privileged: true` para poder interrogar directamente al bus USB del host (Raspberry Pi) y detectar el Arduino dinámicamente en caliente.
 
-### Pruebas Locales
+### Pruebas Locales de Desarrollo
+Para ejecutar la aplicación de forma local e independiente de Docker:
 ```bash
 pip install opencv-python pytesseract pyserial mysql-connector-python numpy
 python program.py
 ```
-> **Nota:** En Windows, cambiar `PUERTO = "/dev/ttyACM0"` por el puerto COM correspondiente (ej. `COM3`).
+*(El script detectará automáticamente tu puerto COM activo si estás programando desde Windows o /dev/tty si estás en Linux).*

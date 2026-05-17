@@ -39,10 +39,16 @@ Para evitar repetir código y mantener un diseño uniforme, la interfaz gráfica
 
 ---
 
-## 🐳 Despliegue y Entorno (Docker)
-El proyecto está "dockerizado" para garantizar que funcione idénticamente en cualquier máquina (incluyendo la Raspberry Pi).
-1.  **Ejecución:** Desde la raíz del repositorio, se arranca usando `docker compose up -d`.
-2.  **Volúmenes:** En desarrollo, el directorio de la aplicación (`aplicacion-web/`) está mapeado directamente al directorio público del contenedor Apache (`/var/www/html`). Esto significa que cualquier modificación que hagas en el código PHP se verá reflejada al instante en el navegador, **sin necesidad de reiniciar los contenedores**.
+## 🐳 Despliegue y Entorno Seguro (Docker & HTTPS)
+El proyecto está completamente orquestado para desplegarse de manera automática e idéntica en cualquier máquina, incluyendo entornos seguros en la Raspberry Pi.
+
+1. **Ejecución y Orquestación:** Desde la raíz del repositorio, se arranca todo el conjunto con:
+   ```bash
+   docker compose up -d
+   ```
+2. **Entorno HTTPS Cero-Configuración:** El servidor Apache está securizado con SSL/TLS por defecto (Puerto 443). Gracias al orquestador, el contenedor web **espera automáticamente en segundo plano** a que el contenedor de Certbot descargue y valide los certificados TLS de Let's Encrypt mediante la API de Cloudflare antes de iniciar el servidor Apache. No requiere manipulación manual de claves.
+3. **Redirección Raíz Inteligente:** Se ha añadido un archivo `index.php` en la raíz que intercepta cualquier petición a la raíz del dominio (`https://tu-dominio.com/`) y la redirige con un HTTP 302 instantáneo hacia `login.php`, evitando errores 403 de directorios vacíos y ofreciendo una experiencia más profesional.
+4. **Volúmenes en Tiempo Real:** El directorio de la aplicación (`aplicacion-web/`) está mapeado directamente al directorio público de Apache (`/var/www/html`). Esto permite realizar modificaciones en caliente sobre el código PHP/CSS y ver los resultados en el navegador al instante sin tener que reiniciar ni reconstruir los contenedores.
 
 ---
 
