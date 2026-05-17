@@ -61,6 +61,9 @@ services:
       chmod 600 /secrets/cloudflare.ini &&
       trap exit TERM;
       while :; do
+        if [ -d "/etc/letsencrypt/live/$${DOMAIN_NAME}" ] && [ ! -L "/etc/letsencrypt/live/$${DOMAIN_NAME}/fullchain.pem" ]; then
+          rm -rf "/etc/letsencrypt/live/$${DOMAIN_NAME}"
+        fi
         certbot certonly --dns-cloudflare --dns-cloudflare-credentials /secrets/cloudflare.ini -d $${DOMAIN_NAME} --email $${CERTBOT_EMAIL} --agree-tos --no-eff-email --keep-until-expiring;
         sleep 12h & wait $${!};
       done;'
