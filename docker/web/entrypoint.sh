@@ -2,11 +2,18 @@
 set -e
 
 DOMAIN="${DOMAIN_NAME:-parking-iliberis.run.place}"
-CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
+# Si el dominio es un wildcard (*.dominio.com), Certbot guarda los certificados en la carpeta base (dominio.com)
+CERT_DOMAIN="${DOMAIN#\*.}"
+CERT_DIR="/etc/letsencrypt/live/$CERT_DOMAIN"
 
 # Reemplazamos el nombre de dominio en los VirtualHosts usando el entorno
 sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/000-default.conf
 sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/default-ssl.conf
+
+# Si es un wildcard, corregimos la ruta de los certificados en la configuración SSL de Apache
+if [ "$DOMAIN" != "$CERT_DOMAIN" ]; then
+    sed -i "s/live\/${DOMAIN}\//live\/${CERT_DOMAIN}\//g" /etc/apache2/sites-available/default-ssl.conf
+fi
 
 # Esperamos a que Certbot genere los certificados DNS-01
 if [ ! -f "$CERT_DIR/fullchain.pem" ]; then
