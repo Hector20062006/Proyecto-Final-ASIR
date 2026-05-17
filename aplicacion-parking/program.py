@@ -39,8 +39,8 @@ def auto_detectar_puerto_arduino():
 PUERTO = auto_detectar_puerto_arduino()
 BAUDIOS = 9600
 
-CERRADA = 100
-ABIERTA = 10
+CERRADA = 200
+ABIERTA = 85
 
 def actualizar_plaza(id_plaza, estado):
     try:
