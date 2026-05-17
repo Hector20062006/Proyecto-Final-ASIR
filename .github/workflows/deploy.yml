@@ -21,7 +21,7 @@ jobs:
           # Esperar a que los contenedores se cierren del todo
           sleep 5
           # Matar cualquier proceso zombi que siga usando el puerto serie
-          sudo fuser -k /dev/ttyACM0 || true
+          fuser -k /dev/ttyACM* /dev/ttyUSB* || true
           sleep 2
 
       - name: Actualizar Arduino
@@ -33,11 +33,16 @@ jobs:
           arduino-cli lib install "LiquidCrystal I2C"
           arduino-cli lib install "Servo"
           
+          # Detectar el puerto dinámicamente
+          export PORT=$(arduino-cli board list | grep arduino | awk '{print $1}')
+          if [ -z "$PORT" ]; then echo "Arduino no detectado por arduino-cli"; exit 1; fi
+          echo "Puerto detectado: $PORT"
+
           # 1. Compilar y subir el sketch vacío para limpiar la memoria
           echo "Subiendo sketch vacío para resetear estado..."
           cd ~/Proyecto-Final-ASIR/aplicacion-parking/vacio
           arduino-cli compile --fqbn arduino:avr:uno vacio.ino
-          arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno vacio.ino
+          arduino-cli upload -p $PORT --fqbn arduino:avr:uno vacio.ino
           
           sleep 3 # Darle un respiro al Arduino tras el reinicio
           
@@ -45,7 +50,7 @@ jobs:
           echo "Subiendo sketch principal..."
           cd ~/Proyecto-Final-ASIR/aplicacion-parking/servo_and_lcd_serial
           arduino-cli compile --fqbn arduino:avr:uno servo_and_lcd_serial.ino
-          arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno servo_and_lcd_serial.ino
+          arduino-cli upload -p $PORT --fqbn arduino:avr:uno servo_and_lcd_serial.ino
 
       - name: Redesplegar contenedores
         run: |
