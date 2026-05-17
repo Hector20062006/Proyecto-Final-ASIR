@@ -18,18 +18,32 @@ jobs:
         run: |
           cd ~/Proyecto-Final-ASIR
           docker compose down || true
+          # Esperar a que los contenedores se cierren del todo
+          sleep 5
+          # Matar cualquier proceso zombi que siga usando el puerto serie
+          sudo fuser -k /dev/ttyACM0 || true
+          sleep 2
 
       - name: Actualizar Arduino
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          cd ~/Proyecto-Final-ASIR/aplicacion-parking/servo_and_lcd_serial
           
           # Asegurarse de tener el core y librerías instaladas
           arduino-cli core install arduino:avr
           arduino-cli lib install "LiquidCrystal I2C"
           arduino-cli lib install "Servo"
           
-          # Compilar y subir al Arduino (Asumiendo Arduino Uno en /dev/ttyACM0)
+          # 1. Compilar y subir el sketch vacío para limpiar la memoria
+          echo "Subiendo sketch vacío para resetear estado..."
+          cd ~/Proyecto-Final-ASIR/aplicacion-parking/vacio
+          arduino-cli compile --fqbn arduino:avr:uno vacio.ino
+          arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno vacio.ino
+          
+          sleep 3 # Darle un respiro al Arduino tras el reinicio
+          
+          # 2. Compilar y subir el sketch principal
+          echo "Subiendo sketch principal..."
+          cd ~/Proyecto-Final-ASIR/aplicacion-parking/servo_and_lcd_serial
           arduino-cli compile --fqbn arduino:avr:uno servo_and_lcd_serial.ino
           arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno servo_and_lcd_serial.ino
 
