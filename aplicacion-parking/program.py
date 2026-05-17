@@ -23,6 +23,7 @@ def log_mensaje(origen, mensaje):
 def auto_detectar_puerto_arduino():
     # Permite sobrescribir el puerto manualmente por .env si existe
     if "ARDUINO_PORT" in os.environ and os.environ["ARDUINO_PORT"].strip() != "":
+        log_mensaje("Sistema", f"Usando puerto manual forzado por ARDUINO_PORT: {os.environ['ARDUINO_PORT']}")
         return os.environ["ARDUINO_PORT"]
     
     # Busca automáticamente puertos USB/ACM conectados
