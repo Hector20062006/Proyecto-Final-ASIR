@@ -6,14 +6,12 @@ DOMAIN="${DOMAIN_NAME:-parking-iliberis.run.place}"
 CERT_DOMAIN="${DOMAIN#\*.}"
 CERT_DIR="/etc/letsencrypt/live/$CERT_DOMAIN"
 
-# Reemplazamos el nombre de dominio en los VirtualHosts usando el entorno
-sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/000-default.conf
-sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/default-ssl.conf
+# Primero, configuramos la ruta de los certificados en la configuración SSL usando CERT_DOMAIN (sin asteriscos)
+sed -i "s/live\/__DOMAIN_NAME__\//live\/${CERT_DOMAIN}\//g" /etc/apache2/sites-available/default-ssl.conf
 
-# Si es un wildcard, corregimos la ruta de los certificados en la configuración SSL de Apache
-if [ "$DOMAIN" != "$CERT_DOMAIN" ]; then
-    sed -i "s/live\/${DOMAIN}\//live\/${CERT_DOMAIN}\//g" /etc/apache2/sites-available/default-ssl.conf
-fi
+# Segundo, reemplazamos ServerName con el CERT_DOMAIN limpio y añadimos ServerAlias con el DOMAIN original (que puede ser wildcard)
+sed -i "s/ServerName __DOMAIN_NAME__/ServerName ${CERT_DOMAIN}\n    ServerAlias ${DOMAIN}/g" /etc/apache2/sites-available/000-default.conf
+sed -i "s/ServerName __DOMAIN_NAME__/ServerName ${CERT_DOMAIN}\n    ServerAlias ${DOMAIN}/g" /etc/apache2/sites-available/default-ssl.conf
 
 # Esperamos a que Certbot genere los certificados DNS-01
 if [ ! -f "$CERT_DIR/fullchain.pem" ]; then
