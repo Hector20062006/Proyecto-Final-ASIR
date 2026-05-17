@@ -1,6 +1,7 @@
 import cv2
 import pytesseract
 import serial
+import serial.tools.list_ports
 import time
 import re
 import mysql.connector
@@ -19,7 +20,22 @@ def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{ahora}] [{origen}] {mensaje}", flush=True)
 
-PUERTO = "/dev/ttyACM0"
+def auto_detectar_puerto_arduino():
+    # Permite sobrescribir el puerto manualmente por .env si existe
+    if "ARDUINO_PORT" in os.environ and os.environ["ARDUINO_PORT"].strip() != "":
+        return os.environ["ARDUINO_PORT"]
+    
+    # Busca automáticamente puertos USB/ACM conectados
+    puertos = serial.tools.list_ports.comports()
+    for p in puertos:
+        if "Arduino" in p.description or "ACM" in p.device or "USB" in p.device:
+            log_mensaje("Sistema", f"Puerto Arduino autodetectado en: {p.device}")
+            return p.device
+            
+    log_mensaje("Sistema", "ADVERTENCIA: No se autodetectó ningún Arduino. Usando /dev/ttyACM0 por defecto.")
+    return "/dev/ttyACM0"
+
+PUERTO = auto_detectar_puerto_arduino()
 BAUDIOS = 9600
 
 CERRADA = 100

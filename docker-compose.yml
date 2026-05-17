@@ -68,19 +68,16 @@ services:
       - DB_USER=${DB_USER:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root}
       - DB_NAME=${DB_NAME:-parking_ASIR}
+      - ARDUINO_PORT=${ARDUINO_PORT:-/dev/ttyACM0}
     command: sh -c "echo '127.0.0.1 db' >> /etc/hosts && python program.py"
     group_add:
       - video
     depends_on:
       db:
         condition: service_healthy
-    # Mapeo de dispositivos de hardware para la Raspberry Pi
-    devices:
-      - "/dev/ttyACM0:/dev/ttyACM0"  # Arduino
-      - "/dev/video0:/dev/video0"    # Cámara 0 (Captura)
-      - "/dev/video1:/dev/video1"    # Cámara 0 (Metadatos)
-      - "/dev/video2:/dev/video2"    # Cámara 2 (Captura)
-      - "/dev/video3:/dev/video3"    # Cámara 2 (Metadatos)
+    # Al tener privileged: true, el contenedor ya tiene acceso a TODOS los dispositivos /dev
+    # por lo que no es necesario mapear estáticamente devices: - "/dev/ttyACM0" etc,
+    # permitiendo la autodetección dinámica en Python.
 
 volumes:
   db_data:
