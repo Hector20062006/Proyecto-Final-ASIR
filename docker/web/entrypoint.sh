@@ -8,15 +8,15 @@ CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
 sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/000-default.conf
 sed -i "s/__DOMAIN_NAME__/${DOMAIN}/g" /etc/apache2/sites-available/default-ssl.conf
 
-# Si no existe el certificado de Let's Encrypt, generamos uno temporal autofirmado
+# Esperamos a que Certbot genere los certificados DNS-01
 if [ ! -f "$CERT_DIR/fullchain.pem" ]; then
-    echo "Certificados de Let's Encrypt no encontrados para $DOMAIN."
-    echo "Generando certificados autofirmados temporales para iniciar Apache..."
-    mkdir -p "$CERT_DIR"
-    openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-        -keyout "$CERT_DIR/privkey.pem" \
-        -out "$CERT_DIR/fullchain.pem" \
-        -subj "/CN=localhost"
+    echo "================================================="
+    echo "Esperando a que Certbot genere los certificados SSL..."
+    echo "================================================="
+    while [ ! -f "$CERT_DIR/fullchain.pem" ]; do
+        sleep 5
+    done
+    echo "¡Certificados encontrados!"
 fi
 
 echo "Iniciando Apache en background..."
