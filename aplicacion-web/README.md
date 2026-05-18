@@ -1,63 +1,116 @@
-# Aplicación Web - Parking Iliberis (Proyecto ASIR)
+# 🌐 Documentación Técnica: Aplicación Web del Parking Iliberis (PHP & RBAC)
 
-## 📌 Descripción General
-Este módulo es la **capa de presentación y gestión (Frontend/Backend)** del sistema de control de acceso al Parking Iliberis. Proporciona una interfaz web intuitiva para que los usuarios (administradores, profesores y alumnos) puedan interactuar con el sistema, así como un punto de enlace (API) para que el módulo de visión artificial (cámaras) registre las entradas y salidas de vehículos.
-
-Está desarrollado en **PHP puro** y se ejecuta sobre un servidor web Apache.
+Este módulo constituye la **capa de presentación, administración y lógica de negocio (Frontend/Backend)** del sistema del parking automatizado. Ofrece un portal web responsive estructurado bajo un modelo de control de accesos basado en roles (RBAC) y actúa como la pasarela receptora (API) para el hardware y el sistema de visión artificial.
 
 ---
 
-## ⚙️ Funcionalidad y Módulos Principales
+## 📂 Mapa Completo de Archivos y Arquitectura
 
-El flujo de trabajo y la estructura del proyecto se dividen en los siguientes componentes clave:
+Para asegurar un mantenimiento óptimo del código, los ficheros del portal se distribuyen de la siguiente forma:
 
-### 1. Sistema de Autenticación y Sesiones (`login.php` / `logout.php`)
-*   **Inicio de Sesión:** Permite a los usuarios acceder al sistema utilizando su DNI o correo electrónico junto con su contraseña cifrada.
-*   **Control de Acceso basado en Roles (RBAC):** Una vez validadas las credenciales contra la base de datos (tabla `usuarios`), el sistema comprueba el rol del usuario (tabla `roles`) y lo redirige automáticamente a su panel de control específico (admin, profesor o alumno).
-*   **Seguridad:** Las contraseñas se comprueban usando la función `password_verify()` de PHP, garantizando que el sistema es seguro y que no se manejan contraseñas en texto plano. La gestión de estado se realiza con variables de sesión `$_SESSION`.
-
-### 2. Paneles por Rol (Directorios Aislados)
-La aplicación cuenta con carpetas independientes para segmentar la lógica y el acceso según el rol:
-*   📁 **`admin/`**: Panel de control total. Permite la administración integral del sistema, gestión de usuarios, auditoría completa de los registros de entrada y salida, etc.
-*   📁 **`profesor/`**: Panel para personal docente. Permite gestionar vehículos, ver historial de accesos y consultar la **disponibilidad de plazas** (ahora conectadas a sensores físicos reales).
-*   📁 **`alumno/`**: Panel básico para el alumnado. Similar al del profesor, restringido a visualizar sus datos, estado de acceso y **aforo del parking**.
-
-### 3. Sistema de Reporte de Mal Aparcado (`profesor/reportar_mal_aparcado.php`)
-*   **Finalidad:** Permite a los profesores notificar vehículos que estén obstaculizando el parking de forma manual.
-*   **Seguridad de Estado (Anti-Passback):** El sistema verifica que el coche esté físicamente dentro del parking (su último movimiento debe ser `ENTRADA` en la tabla `accesos`) antes de permitir que sea reportado. Si no está registrado como dentro, se bloquea el reporte mostrando un aviso claro, evitando alertas falsas.
-*   **Integración con Telegram:** Si el coche está dentro, identifica al dueño del vehículo por su matrícula y envía un aviso instantáneo al canal común de profesores a través del Bot de Telegram. El mensaje incluye el propietario y un motivo opcional (ej: "bloqueando mi salida").
-*   **Gestión Administrativa:** El administrador cuenta con una vista específica (`admin/ver_incidencias.php`) para auditar todos estos reportes, pudiendo filtrar por matrícula, fecha o propietario.
-*   **Monitoreo de Intrusos (`admin/ver_intentos.php`):** Sección dedicada a visualizar matrículas detectadas que no están en la base de datos, permitiendo identificar lecturas erróneas o intentos de acceso no permitidos.
-
-### 4. API de Recepción de Hardware (`api_camara.php`)
-Es un archivo fundamental que actúa como puente de integración entre el **Contenedor de Visión Artificial (Python)** y la base de datos.
-*   **Funcionamiento:** Escucha peticiones HTTP `POST` enviadas por el programa de Python cada vez que se detecta una matrícula de forma física en el parking.
-*   **Registro de Datos:** Recibe los parámetros `matricula` y `tipo_movimiento` (ENTRADA o SALIDA) y los inserta inmediatamente en la tabla `accesos` junto con la marca de tiempo exacta del servidor.
-*   **Respuesta:** Devuelve un simple `OK` al proceso de Python para confirmar que el registro se guardó correctamente en MySQL, o un mensaje de error si hubo algún problema de conexión.
-
-### 5. Estructura y Vistas (`header.php` / `footer.php`)
-Para evitar repetir código y mantener un diseño uniforme, la interfaz gráfica está modularizada. Los archivos de cabecera (donde se cargan CSS, logos y menús) y los pies de página se incluyen dinámicamente en todas las vistas mediante sentencias `require` o `include`.
+### 📁 Archivos en la Raíz del Proyecto
+*   **`index.php`**: Archivo de redirección raíz. Intercepta solicitudes entrantes y realiza una redirección limpia (HTTP 302) hacia `login.php`, evitando accesos prohibidos a directorios del servidor (errores 403).
+*   **`login.php`**: Interfaz de autenticación unificada. Valida credenciales contra la base de datos (DNI o Email) mediante `password_verify()` y gestiona la seguridad de la sesión.
+*   **`logout.php`**: Destruye la sesión activa de forma segura y redirige al login.
+*   **`conexion.php`**: Módulo de conexión a MySQL. Lee las variables del entorno en caliente (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`), permitiendo un despliegue transparente tanto en XAMPP local como en contenedores Docker de producción.
+*   **`telegram_config.php`**: Contiene la función modular `enviarMensajeTelegram()`, que despacha peticiones HTTP POST cURL a la API de bots de Telegram con formato HTML enriquecido.
+*   **`api_camara.php`**: El punto de enlace (API endpoint) HTTP POST del sistema. Recibe peticiones del script central en Python (`program.py`) para registrar las lecturas físicas en tiempo real.
+*   **`header.php` / `footer.php`**: Cabecera y pie de página de la interfaz de login externa.
+*   **`header2.php` / `footer2.php`**: Cabecera y pie de página modulares de la interfaz de usuario autenticado (cargan el menú de navegación, fuentes e iconos).
 
 ---
 
-## 🐳 Despliegue y Entorno Seguro (Docker & HTTPS)
-El proyecto está completamente orquestado para desplegarse de manera automática e idéntica en cualquier máquina, incluyendo entornos seguros en la Raspberry Pi.
+### 📁 Directorio `admin/` (Panel de Control Total)
+Reservado exclusivamente para usuarios con rol `administrador`. Da acceso a las siguientes herramientas de auditoría y gestión:
 
-1. **Ejecución y Orquestación:** Desde la raíz del repositorio, se arranca todo el conjunto con:
-   ```bash
-   docker compose up -d
-   ```
-2. **Entorno HTTPS Cero-Configuración:** El servidor Apache está securizado con SSL/TLS por defecto (Puerto 443). Gracias al orquestador, el contenedor web **espera automáticamente en segundo plano** a que el contenedor de Certbot descargue y valide los certificados TLS de Let's Encrypt mediante la API de Cloudflare antes de iniciar el servidor Apache. No requiere manipulación manual de claves.
-3. **Redirección Raíz Inteligente:** Se ha añadido un archivo `index.php` en la raíz que intercepta cualquier petición a la raíz del dominio (`https://tu-dominio.com/`) y la redirige con un HTTP 302 instantáneo hacia `login.php`, evitando errores 403 de directorios vacíos y ofreciendo una experiencia más profesional.
-4. **Volúmenes en Tiempo Real:** El directorio de la aplicación (`aplicacion-web/`) está mapeado directamente al directorio público de Apache (`/var/www/html`). Esto permite realizar modificaciones en caliente sobre el código PHP/CSS y ver los resultados en el navegador al instante sin tener que reiniciar ni reconstruir los contenedores.
+*   **`index.php`**: Tablero principal del administrador. Lista a todos los usuarios con sus DNI, email, teléfono, rol y matrícula asociada mediante un **SQL LEFT JOIN** entre las tablas `usuarios` y `vehiculos`. Incluye un motor de búsqueda por texto (DNI/Nombre) y un filtro rápido de roles.
+*   **`formulario_usuario.php`**: Interfaz de registro para añadir nuevos usuarios y sus vehículos asociados de forma conjunta.
+*   **`guardar_usuario.php`**: Procesa el formulario anterior. Genera contraseñas cifradas seguras mediante `password_hash()` con el algoritmo `PASSWORD_DEFAULT`, inserta al usuario en la BD y registra su matrícula en la tabla de vehículos.
+*   **`borrar_usuario.php`**: Permite al administrador seleccionar usuarios de la lista mediante botones dinámicos y los elimina llamando a `borrar2_usuario.php`.
+*   **`borrar2_usuario.php`**: Script silencioso que ejecuta la sentencia `DELETE` y gestiona la redirección.
+*   **`actualizar_usuario.php`**: Menú interactivo de selección de usuarios para su edición. Redirige al asistente de actualización `actualizar2_usuario.php`.
+*   **`actualizar2_usuario.php`**: Formulario dinámico que recupera y muestra los datos vigentes del usuario/vehículo seleccionado para su modificación.
+*   **`actualizar3_usuario.php`**: Procesa la actualización de los datos del usuario y del vehículo utilizando transacciones SQL consistentes.
+*   **`historial_accesos.php`**: Panel de auditoría de seguridad. Lista todas las entradas y salidas de vehículos registradas en el parking, mostrando marcas de tiempo precisas y la dirección del flujo de acceso.
+*   **`ver_incidencias.php`**: Listado de coches reportados por mal aparcamiento. Permite filtrar dinámicamente por matrícula, propietario o fecha, facilitando la supervisión de infractores.
+*   **`ver_intentos.php`**: Monitor de intrusos. Muestra una tabla con todas las matrículas capturadas por las cámaras que no constan en la base de datos de vehículos autorizados, identificando vehículos no registrados o errores en el OCR.
+*   **`control_barrera.php`**: Interfaz de accionamiento manual. Permite al administrador forzar y simular movimientos seleccionando vehículos desde un buscador de autocompletado en caliente (HTML5 `<datalist>` conectado a la base de datos).
+*   **`registrar_acceso.php`**: Procesa la acción manual e inserta registros de `ENTRADA` o `SALIDA` en MySQL de forma inmediata.
+
+---
+
+### 📁 Directorio `profesor/` (Panel del Personal Docente)
+Panel optimizado para facilitar la autogestión de los docentes del centro escolar:
+
+*   **`index.php`**: Cuadro de mando del profesor. Presenta su perfil, su vehículo autorizado, el historial con sus últimos 5 accesos registrados en el parking y un acceso directo para reportar incidencias.
+*   **`editar_perfil.php`**: Formulario interactivo que permite al docente modificar y actualizar sus propios datos de contacto (Email y Teléfono).
+*   **`editar_vehiculo.php`**: Permite al profesor actualizar de forma autónoma la matrícula, marca y modelo del vehículo que utilizará para acceder al centro escolar.
+*   **`plazas.php`**: Consulta gráfica en tiempo real. Interroga la tabla `plazas` en la base de datos y muestra casillas dinámicas con el estado de ocupación de cada espacio físico (Verde para libre, Rojo para ocupada), sincronizadas directamente con los sensores de hardware administrados por Python.
+*   **`reportar_mal_aparcado.php`**: El canal de incidencias activo.
+    1.  El profesor escribe una matrícula sospechosa y un motivo opcional.
+    2.  El backend valida la existencia de la matrícula y aplica una regla de **Anti-Passback**: el sistema comprueba en MySQL si el último registro del vehículo es de `ENTRADA`. Si no figura dentro del parking, deniega el reporte inmediatamente con un mensaje descriptivo para evitar falsas alertas.
+    3.  Si se confirma que está dentro, inserta la incidencia en `reportes_mal_aparcado` y llama al webhook de Telegram. Este despacha una notificación enrich-HTML automática al canal de profesores con la matrícula, el propietario y el motivo indicado para que el infractor retire el coche.
 
 ---
 
-## 🚀 Arquitectura y Evolución Futura (Microservicios)
-Aunque actualmente este módulo realiza las conexiones a la base de datos de manera directa (vía `conexion.php`), la arquitectura del proyecto está orientada a evolucionar:
+### 📁 Directorio `alumno/` (Panel de Consulta de Alumnado)
+Panel con acceso limitado y seguro para el cuerpo estudiantil del instituto:
 
-*   **Delegación de Lógica (Refactorización):** El objetivo es que la aplicación web no realice lógica de negocio compleja ni consultas de escritura directas (salvo la API de cámara actualmente). Todo se delegará a un servidor central en Python al cual la web consultará mediante llamadas HTTP.
-*   **Front Controller:** En el futuro se buscará centralizar todas las peticiones a través de un único `index.php` (Routing) para tener un control más estricto sobre las peticiones y mejorar la seguridad global de la aplicación.
+*   **`index.php`**: Tablero del alumno. Diseñado como **interfaz de solo lectura** por motivos de seguridad. Muestra su DNI, datos de contacto, vehículos matriculados a su nombre y sus últimos 5 movimientos físicos en la barrera. Redirige formalmente a secretaría para cualquier trámite de modificación.
+*   **`plazas.php`**: Permite a los alumnos visualizar en tiempo real la ocupación de las plazas de aparcamiento y gestionar sus trayectos con previsión del aforo libre.
 
 ---
-*Autores: Imad y Hector*
+
+## 🔐 Seguridad, Autenticación y Flujo RBAC
+
+La aplicación implementa un sistema robusto de **Control de Accesos Basado en Roles (RBAC)** con validación de seguridad a tres niveles:
+
+```mermaid
+sequenceDiagram
+    actor Usuario
+    participant Login as login.php
+    participant DB as Base de Datos
+    participant Session as Variables de Sesión
+    participant Panel as Panel de Control (admin/profesor/alumno)
+
+    Usuario->>Login: Introduce DNI/Email y Password
+    Login->>DB: Consulta usuario y id_rol
+    DB-->>Login: Devuelve datos y password hash
+    Note over Login: Verifica password_verify()
+    
+    alt Credenciales Válidas
+        Login->>Session: Registra $_SESSION['role'] (minúsculas)
+        Login->>Session: Registra $_SESSION['dni'] y ['username']
+        Login->>Panel: Redirige según Rol (HTTP Header)
+        Note over Panel: Comprueba isset($_SESSION['role'])
+        Panel-->>Usuario: Muestra interfaz autorizada
+    else Credenciales Inválidas
+        Login-->>Usuario: Muestra mensaje de error
+    end
+```
+
+### Reglas Críticas de Seguridad en PHP:
+1.  **Cifrado de Contraseñas:** En lugar de MD5 o texto plano, se usa `password_hash()` con salting automático en `guardar_usuario.php` y `password_verify()` en `login.php`.
+2.  **Validación de Cabecera Aislada:** Cada panel realiza comprobaciones de sesión estrictas al principio del archivo para interceptar a usuarios que intenten saltar la autenticación escribiendo URLs directas en la barra de direcciones:
+    ```php
+    // Ejemplo en el panel de Administración:
+    session_start();
+    if (!isset($_SESSION['role']) || strtolower(trim($_SESSION['role'])) !== 'administrador') {
+        header("Location: ../login.php");
+        exit;
+    }
+    ```
+3.  **Sanitización de Consultas SQL:** Las entradas de formularios y filtros se limpian con `mysqli_real_escape_string()` y `trim()` para neutralizar vectores de inyección SQL.
+
+---
+
+## 🐳 Integración de Red y Orquestación Docker
+
+El portal web está preparado para funcionar como un microservicio independiente en una arquitectura de contenedores Docker:
+
+*   **Despliegue Integrado con SSL (Puerto 443):** En el archivo general de orquestación, el contenedor web (Apache+PHP) está diseñado con un mecanismo de espera. Aguarda automáticamente a que el contenedor de Certbot complete la solicitud y validación de los certificados SSL/TLS con Let's Encrypt (usando el plugin DNS Cloudflare) antes de arrancar los puertos seguros, garantizando conexiones cifradas en producción.
+*   **Enlace de Volúmenes (Desarrollo en Caliente):** El código fuente de `aplicacion-web/` se monta directamente sobre la ruta pública de Apache `/var/www/html/` en el contenedor. Esto permite editar código PHP o retocar archivos CSS y ver los resultados en el navegador en caliente, sin necesidad de compilar o reconstruir contenedores.
+*   **Acceso a la API en Caliente:** El script `api_camara.php` recibe llamadas JSON/POST de la Raspberry Pi sobre el protocolo HTTPS, traduciendo eventos de hardware a registros MySQL persistentes de forma instantánea.
+
+---
+*Módulo desarrollado y maquetado por Imad y Héctor.*
