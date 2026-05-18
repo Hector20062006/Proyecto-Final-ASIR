@@ -24,9 +24,10 @@ La aplicación cuenta con carpetas independientes para segmentar la lógica y el
 
 ### 3. Sistema de Reporte de Mal Aparcado (`profesor/reportar_mal_aparcado.php`)
 *   **Finalidad:** Permite a los profesores notificar vehículos que estén obstaculizando el parking de forma manual.
-*   **Integración con Telegram:** El sistema identifica al dueño del vehículo por su matrícula y envía un aviso instantáneo al canal común de profesores a través de un Bot de Telegram. El mensaje incluye el propietario y un motivo opcional (ej: "bloqueando mi salida").
+*   **Seguridad de Estado (Anti-Passback):** El sistema verifica que el coche esté físicamente dentro del parking (su último movimiento debe ser `ENTRADA` en la tabla `accesos`) antes de permitir que sea reportado. Si no está registrado como dentro, se bloquea el reporte mostrando un aviso claro, evitando alertas falsas.
+*   **Integración con Telegram:** Si el coche está dentro, identifica al dueño del vehículo por su matrícula y envía un aviso instantáneo al canal común de profesores a través del Bot de Telegram. El mensaje incluye el propietario y un motivo opcional (ej: "bloqueando mi salida").
 *   **Gestión Administrativa:** El administrador cuenta con una vista específica (`admin/ver_incidencias.php`) para auditar todos estos reportes, pudiendo filtrar por matrícula, fecha o propietario.
-*   **Monitoreo de Intrusos (`admin/ver_intentos.php`):** Nueva sección dedicada a visualizar matrículas detectadas que no están en la base de datos, permitiendo identificar lecturas erróneas o intentos de acceso no permitidos.
+*   **Monitoreo de Intrusos (`admin/ver_intentos.php`):** Sección dedicada a visualizar matrículas detectadas que no están en la base de datos, permitiendo identificar lecturas erróneas o intentos de acceso no permitidos.
 
 ### 4. API de Recepción de Hardware (`api_camara.php`)
 Es un archivo fundamental que actúa como puente de integración entre el **Contenedor de Visión Artificial (Python)** y la base de datos.

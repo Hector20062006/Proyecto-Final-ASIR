@@ -8,5 +8,6 @@ Este directorio contiene el `Dockerfile` encargado de crear el entorno para ejec
 3. **Dependencias de Python:** Instala las dependencias directamente mediante `pip` en la construcción de la imagen (OpenCV headless, PyTesseract, PySerial y conector de MySQL).
 4. **Código Fuente:** Importa todos los scripts (como `program.py`) dentro del contenedor.
 5. **Auditoría:** Gestiona el registro de accesos válidos y denegados directamente contra la base de datos MySQL.
+6. **Notificaciones Autónomas:** Recibe las variables de entorno `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en el archivo de orquestación, permitiendo enviar alertas directamente a Telegram de manera descentralizada y autónoma.
 
-*Importante: Este contenedor está configurado en `docker-compose.yml` para desplegarse directamente en una Raspberry Pi (Linux). El archivo de orquestación mapea directamente el Arduino (`/dev/ttyACM0`) y las cámaras (`/dev/video0`, `/dev/video2`) al contenedor. Si despliegas esto en Windows o en una placa sin cámaras conectadas, el contenedor dará error y se reiniciará.*
+*Importante: Este contenedor está configurado en `docker-compose.yml` para desplegarse con privilegios elevados (`privileged: true`) y modo de red local (`network_mode: host`) en una Raspberry Pi (Linux). Gracias a esto, el script Python es capaz de autodetectar de forma dinámica el puerto USB del Arduino y comunicarse con las cámaras físicas conectadas sin necesidad de mapeos estáticos rígidos, garantizando la portabilidad del hardware.*

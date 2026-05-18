@@ -20,6 +20,31 @@ def log_mensaje(origen, mensaje):
     ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{ahora}] [{origen}] {mensaje}", flush=True)
 
+def enviar_mensaje_telegram(mensaje):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        log_mensaje("Telegram", "ADVERTENCIA: TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID no están configurados en el entorno.")
+        return
+        
+    import urllib.request
+    import urllib.parse
+    
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    data = urllib.parse.urlencode({
+        "chat_id": chat_id,
+        "text": mensaje,
+        "parse_mode": "HTML"
+    }).encode("utf-8")
+    
+    try:
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as response:
+            response.read()
+        log_mensaje("Telegram", "Mensaje enviado a Telegram correctamente.")
+    except Exception as e:
+        log_mensaje("Telegram", f"Error al enviar mensaje por Telegram: {e}")
+
 def auto_detectar_puerto_arduino():
     # Permite sobrescribir el puerto manualmente por .env si existe
     if "ARDUINO_PORT" in os.environ and os.environ["ARDUINO_PORT"].strip() != "":
@@ -144,6 +169,8 @@ _serial_lock = threading.Lock()  # Lock para el puerto serie (solo un hilo a la 
 
 # Variables globales para control de aparcamiento
 _coche_pendiente = {"matricula": None, "tiempo_entrada": 0}
+_plazas_vehiculos = {1: None, 2: None, 3: None}
+_plazas_pendientes_salida = {}
 _parking_lock = threading.Lock()
 
 
@@ -518,35 +545,81 @@ def bucle_lectura_arduino(ser):
                         log_mensaje("Sensor", f"ESTADO: Coche BIEN aparcado en la Plaza {plaza}.")
                         actualizar_plaza(int(plaza), "ocupada")
                         with _parking_lock:
-                            if _coche_pendiente["matricula"]:
-                                log_mensaje("Sensor", f"Matrícula {_coche_pendiente['matricula']} ha aparcado correctamente en la Plaza {plaza}.")
+                            mat = _coche_pendiente["matricula"]
+                            if mat:
+                                log_mensaje("Sensor", f"Matrícula {mat} ha aparcado correctamente en la Plaza {plaza}.")
+                                _plazas_vehiculos[int(plaza)] = mat
                                 _coche_pendiente["matricula"] = None
+                                _coche_pendiente["tiempo_entrada"] = 0
+                                
+                                # Si estaba registrado bajo observación de salida, cancelamos
+                                if int(plaza) in _plazas_pendientes_salida:
+                                    del _plazas_pendientes_salida[int(plaza)]
                     elif estado == "MAL":
                         log_mensaje("Sensor", f"ESTADO: Plaza {plaza} VACÍA o coche MAL aparcado.")
                         actualizar_plaza(int(plaza), "libre")
+                        with _parking_lock:
+                            mat = _plazas_vehiculos.get(int(plaza))
+                            if mat:
+                                # El coche ha abandonado la plaza. Lo ponemos bajo observación de salida.
+                                _plazas_pendientes_salida[int(plaza)] = {
+                                    "matricula": mat,
+                                    "tiempo_sensor_verde": time.time()
+                                }
+                                _plazas_vehiculos[int(plaza)] = None
+                                log_mensaje("Sensor", f"Coche {mat} ha dejado la Plaza {plaza}. Observando salida.")
         except Exception as e:
             log_mensaje("Sensor", f"Error leyendo del puerto serie: {e}")
             time.sleep(1)
 
 
 def monitor_aparcamiento():
-    """Hilo que vigila si un coche tarda demasiado en aparcar."""
+    """Hilo que vigila si un coche tarda demasiado en aparcar o deja una plaza sin salir."""
     log_mensaje("Monitor", "Hilo de monitorización de aparcamiento iniciado.")
-    TIEMPO_LIMITE = 15 # 15 segundos para pruebas (luego cambiar a 300 para 5 mins)
+    TIEMPO_LIMITE = 300  # 5 minutos para ocupar plaza
+    GRACE_PERIOD_SALIDA = 60  # 1 minuto para registrar salida tras dejar la plaza
+    
     while True:
+        # 1. Vigilar coches que entran y tardan demasiado en aparcar
         with _parking_lock:
-            mat = _coche_pendiente["matricula"]
+            mat_p = _coche_pendiente["matricula"]
             t_entrada = _coche_pendiente["tiempo_entrada"]
             
-        if mat is not None:
+        if mat_p is not None and t_entrada > 0:
             if (time.time() - t_entrada) > TIEMPO_LIMITE:
-                log_mensaje("Alerta", f"¡ATENCIÓN! La matrícula {mat} NO ha aparcado o está MAL aparcada (han pasado {TIEMPO_LIMITE}s).")
-                # TODO: Aquí puedes llamar a una función para enviar mensaje a Telegram
+                log_mensaje("Alerta", f"¡ATENCIÓN! La matrícula {mat_p} ha superado el tiempo límite de 5 minutos sin aparcar.")
+                msg = f"⚠️ <b>ALERTA DE PARKING</b> ⚠️\n\nEl vehículo con matrícula <b>{mat_p}</b> ha accedido al recinto pero NO ha aparcado en ninguna plaza libre tras 5 minutos. ¡Podría estar mal estacionado u obstruyendo el paso!"
+                enviar_mensaje_telegram(msg)
                 
-                # Limpiamos para no spamear la alerta infinitamente
+                # Limpiamos para no enviar alertas repetidamente
                 with _parking_lock:
-                    if _coche_pendiente["matricula"] == mat:
+                    if _coche_pendiente["matricula"] == mat_p:
                         _coche_pendiente["matricula"] = None
+                        _coche_pendiente["tiempo_entrada"] = 0
+                        
+        # 2. Vigilar coches que dejaron su plaza pero no han registrado salida
+        with _parking_lock:
+            plazas_a_revisar = list(_plazas_pendientes_salida.items())
+            
+        for id_plaza, info in plazas_a_revisar:
+            mat = info["matricula"]
+            t_verde = info["tiempo_sensor_verde"]
+            
+            if (time.time() - t_verde) > GRACE_PERIOD_SALIDA:
+                # Consultar último acceso en DB
+                ultimo_mov = obtener_ultimo_movimiento(mat)
+                if ultimo_mov == "ENTRADA":
+                    log_mensaje("Alerta", f"¡ATENCIÓN! {mat} dejó la Plaza {id_plaza} pero no ha salido del parking.")
+                    msg = f"⚠️ <b>ALERTA DE PARKING</b> ⚠️\n\nEl vehículo con matrícula <b>{mat}</b> ha dejado la <b>Plaza {id_plaza}</b> (el sensor ha vuelto a VERDE), pero NO ha salido del parking tras el tiempo de gracia. ¡Podría estar mal aparcado u obstruyendo la circulación!"
+                    enviar_mensaje_telegram(msg)
+                else:
+                    log_mensaje("Monitor", f"Vehículo {mat} ha salido correctamente o no está registrado como dentro.")
+                    
+                # Quitar de observación para no repetir
+                with _parking_lock:
+                    if id_plaza in _plazas_pendientes_salida and _plazas_pendientes_salida[id_plaza]["matricula"] == mat:
+                        del _plazas_pendientes_salida[id_plaza]
+                        
         time.sleep(5)
 
 

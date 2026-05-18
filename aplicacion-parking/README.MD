@@ -29,7 +29,7 @@ Las dos cámaras y los sistemas de monitoreo funcionan en **hilos independientes
 - **Cámara 0:** Cámara de **ENTRADA** → ~3 lecturas/segundo.
 - **Cámara 2:** Cámara de **SALIDA** → ~3 lecturas/segundo.
 - **Sensor:** Hilo dedicado a escuchar los mensajes del Arduino sobre el estado de las plazas.
-- **Monitor:** Hilo temporizador que vigila que los coches no tarden más de 15 segundos en aparcar correctamente.
+- **Monitor:** Hilo temporizador que vigila que los coches no tarden más de 5 minutos (300 segundos) en aparcar correctamente tras ingresar. También implementa el control del tiempo de gracia de 1 minuto cuando un coche deja una plaza física sin haber salido del parking, generando alertas de Telegram si persiste dentro del recinto.
 - El acceso al puerto serie (Arduino) está protegido con `threading.Lock()` para evitar conflictos entre hilos.
 
 #### 3. 🗳️ Sistema de Votos (Anti-Falsos Positivos)
@@ -81,8 +81,11 @@ Todo se registra con fecha y hora exactas mediante `log_mensaje()`, con `flush=T
 docker logs -f python_app
 ```
 
-#### 10. 🚨 Sensores de Plaza y Monitorización
-El sistema lee continuamente por puerto serial (`bucle_lectura_arduino`) el estado de sensores físicos instalados en las plazas (`SENSOR|plaza|estado`). Actualiza en tiempo real la base de datos como "ocupada" o "libre" y dispone de un temporizador (`monitor_aparcamiento`) que envía alertas si un coche tarda demasiado en estacionar tras pasar la barrera.
+#### 10. 🚨 Sensores de Plaza y Monitorización Inteligente
+El sistema lee continuamente por puerto serial (`bucle_lectura_arduino`) el estado de los sensores físicos instalados en las plazas (`SENSOR|plaza|estado`). Actualiza en tiempo real la base de datos como "ocupada" o "libre" y asocia cada matrícula a su respectivo espacio físico.
+Dispone de un temporizador inteligente (`monitor_aparcamiento`) que realiza dos comprobaciones críticas:
+- **Alerta de Entrada Tardía:** Genera un aviso de Telegram si una matrícula autorizada ingresa pero no se estaciona correctamente en ninguna plaza libre tras un límite de 5 minutos.
+- **Alerta de Abandono Inesperado:** Si un vehículo desocupa su plaza (el sensor físico vuelve a VERDE), el monitor le concede un tiempo de gracia de 1 minuto para que alcance la barrera de salida. Transcurrido el plazo, si la matrícula no ha registrado su movimiento de `SALIDA` en la base de datos, dispara automáticamente una alerta a Telegram por presunto mal estacionamiento.
 
 ---
 

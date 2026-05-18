@@ -80,6 +80,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-root}
       - DB_NAME=${DB_NAME:-parking_ASIR}
       - ARDUINO_PORT=${ARDUINO_PORT}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     command: sh -c "echo '127.0.0.1 db' >> /etc/hosts && python program.py"
     group_add:
       - video

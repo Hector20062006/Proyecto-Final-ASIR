@@ -49,28 +49,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
         $datos = mysqli_fetch_assoc($res);
         $nombre_dueno = $datos['nombre'] . " " . $datos['apellidos'];
         
-        // 2. Registrar en la base de datos
-        $sql_insert = "INSERT INTO reportes_mal_aparcado (matricula, dni_reportador, motivo) VALUES ('$matricula', '$dni_reportador', '$motivo')";
-        if (mysqli_query($conexion, $sql_insert)) {
-            
-            // 3. Enviar notificación por Telegram
-            $texto_telegram = "⚠️ <b>AVISO DE ESTACIONAMIENTO</b> ⚠️\n\n";
-            $texto_telegram .= "El vehículo con matrícula <b>$matricula</b> está mal aparcado.\n";
-            $texto_telegram .= "Propietario/a: <b>$nombre_dueno</b>\n";
-            
-            if (!empty($motivo)) {
-                $texto_telegram .= "Motivo: <i>$motivo</i>\n";
+        // Verificar si el coche está dentro del parking (su último movimiento debe ser ENTRADA)
+        $sql_estado = "SELECT tipo_movimiento FROM accesos WHERE matricula = '$matricula' ORDER BY fecha_hora DESC LIMIT 1";
+        $res_estado = mysqli_query($conexion, $sql_estado);
+        $esta_dentro = false;
+        
+        if (mysqli_num_rows($res_estado) > 0) {
+            $estado = mysqli_fetch_assoc($res_estado);
+            if ($estado['tipo_movimiento'] == 'ENTRADA') {
+                $esta_dentro = true;
             }
-            
-            $texto_telegram .= "\nPor favor, retírelo lo antes posible para no obstruir el paso. Gracias.";
-
-            $resultado_tel = enviarMensajeTelegram($texto_telegram);
-            
-            $mensaje_status = "Reporte enviado correctamente. Se ha notificado al propietario por Telegram.";
-            $tipo_status = "success";
-        } else {
-            $mensaje_status = "Error al registrar el reporte en la base de datos.";
+        }
+        
+        if (!$esta_dentro) {
+            $mensaje_status = "El vehículo con matrícula $matricula no se encuentra dentro del parking, por lo que no puede estar mal aparcado.";
             $tipo_status = "error";
+        } else {
+            // 2. Registrar en la base de datos
+            $sql_insert = "INSERT INTO reportes_mal_aparcado (matricula, dni_reportador, motivo) VALUES ('$matricula', '$dni_reportador', '$motivo')";
+            if (mysqli_query($conexion, $sql_insert)) {
+                
+                // 3. Enviar notificación por Telegram
+                $texto_telegram = "⚠️ <b>AVISO DE ESTACIONAMIENTO</b> ⚠️\n\n";
+                $texto_telegram .= "El vehículo con matrícula <b>$matricula</b> está mal aparcado.\n";
+                $texto_telegram .= "Propietario/a: <b>$nombre_dueno</b>\n";
+                
+                if (!empty($motivo)) {
+                    $texto_telegram .= "Motivo: <i>$motivo</i>\n";
+                }
+                
+                $texto_telegram .= "\nPor favor, retírelo lo antes posible para no obstruir el paso. Gracias.";
+
+                $resultado_tel = enviarMensajeTelegram($texto_telegram);
+                
+                $mensaje_status = "Reporte enviado correctamente. Se ha notificado al propietario por Telegram.";
+                $tipo_status = "success";
+            } else {
+                $mensaje_status = "Error al registrar el reporte en la base de datos.";
+                $tipo_status = "error";
+            }
         }
     } else {
         $mensaje_status = "La matrícula introducida no está registrada en el sistema.";

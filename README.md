@@ -12,13 +12,13 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 4. **Accionar Hardware:** Controlar mecánicamente una barrera de acceso e interactuar con el usuario a través de una pantalla LCD y semáforos LED.
 5. **Gestión de Red Automática:** Al arrancar, la Raspberry Pi detecta su IP física y la muestra en la pantalla del Arduino para facilitar la conexión.
 6. **Experiencia Personalizada:** El sistema saluda por su nombre a los conductores en la entrada (`Bienvenido, [Nombre]`) y les despide en la salida (`Adios, [Nombre]` / `Buen viaje!`).
-7. **Reporte de Mal Aparcado:** Sistema para que los profesores notifiquen vehículos mal estacionados mediante la matrícula.
-8. **Notificaciones en Tiempo Real:** Integración con la API de Telegram para enviar alertas automáticas al canal común del parking.
+7. **Reporte de Mal Aparcado Seguro:** Sistema para que los profesores notifiquen vehículos mal estacionados mediante la matrícula, bloqueando el reporte si el coche no se encuentra físicamente registrado dentro del parking.
+8. **Notificaciones en Tiempo Real:** Integración bidireccional con la API de Telegram para enviar alertas automáticas y reportes de incidencias en tiempo real.
 9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
 10. **Auditoría de Intentos No Autorizados:** Registro automático de matrículas desconocidas detectadas por el OCR para supervisar posibles intrusiones.
 11. **Gestión de Ocupación en Tiempo Real:** Cálculo automático de plazas libres y ocupadas basado en el flujo de entradas y salidas registrado en la base de datos.
 12. **Sensores Físicos de Aparcamiento:** Integración de microinterruptores que detectan en tiempo real si un vehículo está bien o mal aparcado en su plaza.
-13. **Monitorización de Tiempos:** Un temporizador interno vigila que el vehículo aparque correctamente dentro de un tiempo límite, generando alertas en caso contrario.
+13. **Monitorización de Tiempos y Alertas:** Un temporizador interno vigila que el vehículo aparque correctamente en los 5 minutos posteriores a su entrada. Asimismo, si un vehículo aparcado deja su plaza (el sensor se pone verde) pero no registra su salida del recinto en un tiempo de gracia de 1 minuto, genera una alerta autónoma por Telegram.
 
 ## Estructura del Repositorio
 
@@ -75,6 +75,7 @@ Una de las características clave de este proyecto de fin de ciclo es su resilie
 *   **Arranque Seguro Sincronizado:** El contenedor web de Apache detecta si es la primera vez que se monta y espera automáticamente en bucle a que Certbot valide el dominio y descargue las firmas antes de iniciar la interfaz web. Cero fallos de arranque SSL.
 *   **Validación DNS-01 (Sin Puertos Abiertos):** Al usar la API de Cloudflare para validar la propiedad del dominio, **no es necesario abrir el puerto 80 en tu router**, superando cualquier restricción de red de grado escolar o IPs locales de la Raspberry Pi.
 *   **Gestión Dinámica de Hardware:** El script Python detecta dinámicamente el puerto USB asignado al Arduino. Ya no se rompe el despliegue al cambiar el hardware de puerto USB.
+*   **Alertas Autónomas Inteligentes (Telegram):** El sistema notifica de forma autónoma al canal de Telegram si un vehículo excede los 5 minutos sin aparcar tras ingresar, o si abandona una plaza física sin registrar su salida del recinto en una ventana de gracia de 1 minuto, previniendo falsas alertas.
 *   **Auto-inicialización de Base de Datos:** Tanto el backend web como el módulo Python crean las tablas necesarias al vuelo si no existen.
 *   **Despliegue Continuo (CI/CD):** Actualizaciones integradas mediante GitHub Actions para una entrega de software robusta.
 
