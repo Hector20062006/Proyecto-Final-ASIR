@@ -1,4 +1,19 @@
-# Sistema de Automatización de Parking (Proyecto Final ASIR)
+<div align="center">
+    <h1>【 Sistema de Automatización de Parking 】</h1>
+    <h3>Proyecto Final ASIR</h3>
+</div>
+
+<div align="center"> 
+
+![](https://img.shields.io/github/last-commit/Hector20062006/Proyecto-Final-ASIR?&style=for-the-badge&color=8ad7eb&logo=git&logoColor=D9E0EE&labelColor=1E202B)
+![](https://img.shields.io/github/stars/Hector20062006/Proyecto-Final-ASIR?style=for-the-badge&logo=andela&color=86dbd7&logoColor=D9E0EE&labelColor=1E202B)
+![](https://img.shields.io/github/repo-size/Hector20062006/Proyecto-Final-ASIR?color=86dbce&label=SIZE&logo=protondrive&style=for-the-badge&logoColor=D9E0EE&labelColor=1E202B)
+</div>
+
+<div align="center">
+    <h2>• descripción general •</h2>
+    <h3></h3>
+</div>
 
 Bienvenido al repositorio de mi Proyecto Final para el ciclo superior de Administración de Sistemas Informáticos en Red (ASIR). Este proyecto nace con la idea de automatizar el control de acceso de vehículos a un recinto cerrado (parking), mejorando la seguridad, rapidez e integridad informática frente a los sistemas tradicionales de tickets o llaveros mecánicos.
 
