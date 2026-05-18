@@ -544,7 +544,7 @@ def monitor_aparcamiento():
                 ultimo_mov = obtener_ultimo_movimiento(mat)
                 if ultimo_mov == "ENTRADA":
                     log_mensaje("Alerta", f"¡ATENCIÓN! {mat} dejó la Plaza {id_plaza} pero no ha salido del recinto.")
-                    msg = f"⚠️ <b>ALERTA DE PARKING</b> ⚠️\n\nEl vehículo con matrícula <b>{mat}</b> ha dejado la <b>Plaza {id_plaza}</b> (el sensor ha vuelto a VERDE), pero NO ha salido del parking tras el tiempo de gracia. ¡Podría estar mal aparcado u obstruyendo la circulación!"
+                    msg = f"⚠️ <b>ALERTA DE PARKING</b> ⚠️\n\nEl vehículo con matrícula <b>{mat}</b> ha dejado la <b>Plaza {id_plaza}</b> (el sensor ha vuelto a VERDE), pero NO ha salido del parking tras el tiempo estimado. ¡Podría estar mal aparcado u obstruyendo la circulación!"
                     enviar_mensaje_telegram(msg)
                 else:
                     log_mensaje("Monitor", f"Vehículo {mat} ha salido correctamente.")
