@@ -57,6 +57,7 @@ El repositorio se divide para separar la funcionalidad técnica de la documentac
 
 - 📂 **[`aplicacion-parking/`](./aplicacion-parking/)**: Esta carpeta contiene el **núcleo de la aplicación**. Aquí encontrarás todos los scripts en Python (OpenCV, Tesseract), los ficheros para la placa Arduino y utilidades en consola.
 - 📂 **[`aplicacion-web/`](./aplicacion-web/)**: Contiene la **interfaz de administración y la base de datos**. Almacena el servidor web (PHP, HTML, CSS) y el esquema relacional MySQL usado para gestionar eficientemente qué vehículos están autorizados.
+- 📂 **[`docker/`](./docker/)**: Contiene la configuración de orquestación, construcción de imágenes Docker personalizadas para los microservicios (`web`, `python_app`, `certbot`) e inicialización de la base de datos (`db`).
 
 *(Nota: Tienes un `README.md` técnico específico dentro de cada una de estas carpetas detallando su instalación, cableado y requisitos.)*
 
