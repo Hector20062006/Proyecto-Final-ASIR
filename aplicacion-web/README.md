@@ -65,29 +65,6 @@ Panel con acceso limitado y seguro para el cuerpo estudiantil del instituto:
 
 La aplicación implementa un sistema robusto de **Control de Accesos Basado en Roles (RBAC)** con validación de seguridad a tres niveles:
 
-```mermaid
-sequenceDiagram
-    actor Usuario
-    participant Login as login.php
-    participant DB as Base de Datos
-    participant Session as Variables de Sesión
-    participant Panel as Panel de Control (admin/profesor/alumno)
-
-    Usuario->>Login: Introduce DNI/Email y Password
-    Login->>DB: Consulta usuario y id_rol
-    DB-->>Login: Devuelve datos y password hash
-    Note over Login: Verifica password_verify()
-    
-    alt Credenciales Válidas
-        Login->>Session: Registra $_SESSION['role'] (minúsculas)
-        Login->>Session: Registra $_SESSION['dni'] y ['username']
-        Login->>Panel: Redirige según Rol (HTTP Header)
-        Note over Panel: Comprueba isset($_SESSION['role'])
-        Panel-->>Usuario: Muestra interfaz autorizada
-    else Credenciales Inválidas
-        Login-->>Usuario: Muestra mensaje de error
-    end
-```
 
 ### Reglas Críticas de Seguridad en PHP:
 1.  **Cifrado de Contraseñas:** En lugar de MD5 o texto plano, se usa `password_hash()` con salting automático en `guardar_usuario.php` y `password_verify()` en `login.php`.

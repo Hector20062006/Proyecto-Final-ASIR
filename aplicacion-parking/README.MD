@@ -38,24 +38,6 @@ Para garantizar la lectura de matrículas en condiciones lumínicas cambiantes y
 ### 2. ⚡ Arquitectura Concurrente (Threading y Bloqueos)
 La aplicación paraleliza todas las tareas de monitoreo y hardware en **4 hilos concurrentes independientes** (`threading.Thread`) que se ejecutan indefinidamente en segundo plano:
 
-```mermaid
-graph TD
-    A[iniciar_sistema] --> B[Hilo Cámara 0: Entrada]
-    A --> C[Hilo Cámara 2: Salida]
-    A --> D[Hilo Lectura Serial: Sensores]
-    A --> E[Hilo Monitor: Tiempos y Alertas]
-    
-    B -->|Matrícula Detectada| F{Validación y BD}
-    C -->|Matrícula Detectada| F
-    
-    F -->|Acceso Permitido| G[Enviar Comando Serie]
-    D -->|Sensor Plaza| H[Actualizar MySQL]
-    
-    G -->|Mutex _serial_lock| I[Arduino]
-    D -->|Mutex _parking_lock| J[Control Variables Globales]
-    E -->|Mutex _parking_lock| J
-```
-
 *   **Hilo de Cámara 0 (Entrada):** Configura la cámara USB 0, delimita la Región de Interés (ROI) para optimizar CPU y procesa a ~3 frames/segundo.
 *   **Hilo de Cámara 2 (Salida):** Configura la cámara USB 2 y procesa el egreso de vehículos con la misma frecuencia de muestreo.
 *   **Hilo de Lectura de Arduino (`bucle_lectura_arduino`):** Escucha permanentemente el puerto serie para decodificar las lecturas físicas enviadas por los sensores de plazas.
