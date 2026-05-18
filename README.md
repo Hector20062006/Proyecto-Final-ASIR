@@ -20,6 +20,37 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 12. **Sensores Físicos de Aparcamiento:** Integración de microinterruptores que detectan en tiempo real si un vehículo está bien o mal aparcado en su plaza.
 13. **Monitorización de Tiempos y Alertas:** Un temporizador interno vigila que el vehículo aparque correctamente en los 5 minutos posteriores a su entrada. Asimismo, si un vehículo aparcado deja su plaza (el sensor se pone verde) pero no registra su salida del recinto en un tiempo de gracia de 1 minuto, genera una alerta autónoma por Telegram.
 
+## 📊 Presentación del Proyecto
+
+A continuación, se expone la presentación oficial utilizada para defender este proyecto final. Puedes ver la portada directamente y desplegar el acordeón para visualizar todas las diapositivas en alta resolución, o bien descargar el archivo original.
+
+<p align="center">
+  <a href="./Parking_ASIR_Imad_Hector.pptx" target="_blank">
+    <img src="presentacion/Diapositiva1.PNG" alt="Portada de la Presentación" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+  </a>
+</p>
+
+<details>
+  <summary><b>📖 Desplegar y ver las 9 diapositivas de la presentación</b></summary>
+  <br>
+  <p align="center">
+    <img src="presentacion/Diapositiva2.PNG" alt="Diapositiva 2" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva3.PNG" alt="Diapositiva 3" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva4.PNG" alt="Diapositiva 4" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva5.PNG" alt="Diapositiva 5" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva6.PNG" alt="Diapositiva 6" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva7.PNG" alt="Diapositiva 7" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva8.PNG" alt="Diapositiva 8" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);"><br><br>
+    <img src="presentacion/Diapositiva9.PNG" alt="Diapositiva 9" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+  </p>
+</details>
+
+<p align="center">
+  <b>📥 <a href="./Parking_ASIR_Imad_Hector.pptx">Descargar Presentación (.pptx)</a></b>
+</p>
+
+---
+
 ## Estructura del Repositorio
 
 El repositorio se divide para separar la funcionalidad técnica de la documentación general:
