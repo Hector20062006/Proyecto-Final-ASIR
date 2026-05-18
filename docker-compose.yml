@@ -45,7 +45,10 @@ services:
         condition: service_healthy
 
   certbot:
-    image: certbot/dns-cloudflare
+    build:
+      context: .
+      dockerfile: docker/certbot/Dockerfile
+    pull_policy: build
     container_name: certbot
     restart: always
     volumes:
@@ -54,16 +57,6 @@ services:
       - DOMAIN_NAME=${DOMAIN_NAME}
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
-    entrypoint: >
-      /bin/sh -c '
-      mkdir -p /secrets &&
-      echo "dns_cloudflare_api_token = $${CLOUDFLARE_API_TOKEN}" > /secrets/cloudflare.ini &&
-      chmod 600 /secrets/cloudflare.ini &&
-      trap exit TERM;
-      while :; do
-        certbot certonly --dns-cloudflare --dns-cloudflare-credentials /secrets/cloudflare.ini -d $${DOMAIN_NAME} --email $${CERTBOT_EMAIL} --agree-tos --no-eff-email --keep-until-expiring;
-        sleep 12h & wait $${!};
-      done;'
 
   python_app:
     build: 
