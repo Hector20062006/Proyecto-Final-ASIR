@@ -11,7 +11,7 @@
 </div>
 
 <div align="center">
-    <h2>• descripción general •</h2>
+    <h2> descripción general </h2>
     <h3></h3>
 </div>
 
@@ -66,15 +66,38 @@ A continuación, se expone la presentación oficial utilizada para defender este
 
 ---
 
-## Estructura del Repositorio
+## 📁 Estructura del Proyecto
 
-El repositorio se divide para separar la funcionalidad técnica de la documentación general:
+A continuación se muestra una vista detallada de la arquitectura de archivos del repositorio, organizada de forma modular para separar el software de control de hardware, el portal web y los servicios de orquestación en contenedores:
 
-- 📂 **[`aplicacion-parking/`](./aplicacion-parking/)**: Esta carpeta contiene el **núcleo de la aplicación**. Aquí encontrarás todos los scripts en Python (OpenCV, Tesseract), los ficheros para la placa Arduino y utilidades en consola.
-- 📂 **[`aplicacion-web/`](./aplicacion-web/)**: Contiene la **interfaz de administración y la base de datos**. Almacena el servidor web (PHP, HTML, CSS) y el esquema relacional MySQL usado para gestionar eficientemente qué vehículos están autorizados.
-- 📂 **[`docker/`](./docker/)**: Contiene la configuración de orquestación, construcción de imágenes Docker personalizadas para los microservicios (`web`, `python_app`, `certbot`) e inicialización de la base de datos (`db`).
+```text
+Proyecto-Final-ASIR/
+├── .github/                        # Integración y despliegue continuo automatizado (GitHub Actions)
+│   └── workflows/                  # Flujos de trabajo (CI/CD) para el despliegue automático del proyecto
+│       └── deploy.yml              # Pipeline de despliegue en Raspberry Pi (actualización de Git, compilación/subida de Arduino y Docker)
+├── aplicacion-parking/             # Lógica de hardware, procesamiento de imágenes y OCR (Python/Arduino)
+│   ├── lcd_serial/                 # Código de Arduino para el control de la pantalla LCD I2C
+│   ├── servo_and_lcd_serial/       # Integración en Arduino de servo, pantalla LCD y semáforo LED
+│   ├── servo_serial/               # Código de Arduino para el control del servomotor de la barrera
+│   └── vacio/                      # Directorio de plantilla reservada para desarrollo
+├── aplicacion-web/                 # Interfaz de administración y portal web de usuarios (PHP/CSS)
+│   ├── admin/                      # Panel de administración (control barrera, auditoría, incidencias, etc.)
+│   ├── alumno/                     # Panel del Alumno (plazas, estado)
+│   ├── css/                        # Hojas de estilo Vanilla CSS para todo el sitio web
+│   ├── img/                        # Recursos de imágenes, logos e iconos del portal
+│   └── profesor/                   # Panel de Profesores (reportar mal aparcado, perfil, plazas)
+├── docker/                         # Configuración y orquestación de contenedores Docker
+│   ├── certbot/                    # Contenedor Certbot para SSL/TLS mediante Cloudflare DNS-01
+│   ├── db/                         # Contenedor de base de datos MySQL (esquema y persistencia)
+│   ├── python/                     # Contenedor para el núcleo de procesamiento OCR y hardware
+│   └── web/                        # Contenedor para el servidor Apache y backend en PHP con SSL
+├── presentacion/                   # Diapositivas del proyecto exportadas a imágenes de alta resolución
+├── .env.example                    # Plantilla de configuración de variables de entorno (Telegram, MySQL, SSL)
+└── docker-compose.yml              # Orquestación de toda la arquitectura del parking
+```
 
-*(Nota: Tienes un `README.md` técnico específico dentro de cada una de estas carpetas detallando su instalación, cableado y requisitos.)*
+*(Nota: Tienes un `README.md` técnico específico dentro de cada una de las carpetas principales detallando su respectiva instalación, diagramas de cableado y dependencias).*
+
 
 ## Tecnologías Principales y Disciplinas Aplicadas
 
