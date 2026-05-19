@@ -29,7 +29,7 @@ void setup() {
   lcd.print("Listo");
 
   servoMotor.attach(SERVO_PIN);
-  servoMotor.write(100); // tu cerrada inicial (ajústalo si quieres)
+  servoMotor.write(200); // tu cerrada inicial (ajústalo si quieres)
   delay(500);            // Esperamos que llegue a la posición
   servoMotor.detach();   // Lo apagamos para que no suene
 
