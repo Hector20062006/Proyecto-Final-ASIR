@@ -52,38 +52,46 @@ $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clau
 
 $resultado = mysqli_query($conexion, "SELECT * FROM intentos_denegados $where_sql ORDER BY fecha_hora DESC");
 
-// Estadísticas globales (una consulta por tarjeta)
-$total        = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados"))['n'];
+// Estadísticas globales (una consulta por fila de resumen)
+$total          = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados"))['n'];
 $no_autorizados = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados WHERE motivo = 'NO_AUTORIZADO'"))['n'];
-$duplicados   = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados WHERE motivo = 'ENTRADA_DUPLICADA'"))['n'];
-$salidas_inv  = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados WHERE motivo = 'SALIDA_SIN_ENTRADA'"))['n'];
+$duplicados     = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados WHERE motivo = 'ENTRADA_DUPLICADA'"))['n'];
+$salidas_inv    = mysqli_fetch_assoc(mysqli_query($conexion, "SELECT COUNT(*) AS n FROM intentos_denegados WHERE motivo = 'SALIDA_SIN_ENTRADA'"))['n'];
 
 $hay_filtros = ($filtro_matricula || $filtro_fecha || $filtro_hora || $filtro_motivo);
 ?>
 
 <div class="container container-lg">
     <h2>Intentos de Acceso Denegados</h2>
-    <p>Registro completo de accesos rechazados: matrículas no autorizadas, vehículos que ya están dentro intentando entrar de nuevo, y salidas sin entrada previa.</p>
+    <p>Registro completo de accesos rechazados: matrículas no autorizadas, vehículos ya dentro intentando entrar de nuevo, y salidas sin entrada previa.</p>
 
-    <!-- Tarjetas de resumen -->
-    <div class="stats-grid">
-        <div class="stat-card stat-total">
-            <div class="stat-num"><?php echo (int)$total; ?></div>
-            <div class="stat-lbl">Total intentos</div>
-        </div>
-        <div class="stat-card stat-danger">
-            <div class="stat-num"><?php echo (int)$no_autorizados; ?></div>
-            <div class="stat-lbl">No autorizados</div>
-        </div>
-        <div class="stat-card stat-warning">
-            <div class="stat-num"><?php echo (int)$duplicados; ?></div>
-            <div class="stat-lbl">Entradas duplicadas</div>
-        </div>
-        <div class="stat-card stat-info">
-            <div class="stat-num"><?php echo (int)$salidas_inv; ?></div>
-            <div class="stat-lbl">Salidas sin entrada</div>
-        </div>
-    </div>
+    <!-- Tabla de resumen de totales -->
+    <table class="tabla-resumen">
+        <thead>
+            <tr>
+                <th>Tipo de incidencia</th>
+                <th>Total registrado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge-no-auth">No autorizado</span> &nbsp;Matrícula no registrada en el sistema</td>
+                <td><span class="num-danger"><?php echo (int)$no_autorizados; ?></span></td>
+            </tr>
+            <tr>
+                <td><span class="badge-duplicado">Entrada duplicada</span> &nbsp;Vehículo ya dentro intentando volver a entrar</td>
+                <td><span class="num-warning"><?php echo (int)$duplicados; ?></span></td>
+            </tr>
+            <tr>
+                <td><span class="badge-salida-inv">Salida sin entrada</span> &nbsp;Vehículo sin entrada previa registrada</td>
+                <td><span class="num-info"><?php echo (int)$salidas_inv; ?></span></td>
+            </tr>
+            <tr>
+                <td>Total de intentos denegados</td>
+                <td><span class="num-total"><?php echo (int)$total; ?></span></td>
+            </tr>
+        </tbody>
+    </table>
 
     <!-- Filtros -->
     <form action="" method="GET">
@@ -139,10 +147,10 @@ $hay_filtros = ($filtro_matricula || $filtro_fecha || $filtro_hora || $filtro_mo
                 <?php
                 if ($resultado && mysqli_num_rows($resultado) > 0):
                     while ($fila = mysqli_fetch_assoc($resultado)):
-                        $fecha_hora  = date("d/m/Y · H:i:s", strtotime($fila['fecha_hora']));
-                        $camara      = htmlspecialchars($fila['camara'] ?? '-');
-                        $motivo_raw  = $fila['motivo'] ?? 'NO_AUTORIZADO';
-                        $matricula   = htmlspecialchars($fila['matricula']);
+                        $fecha_hora = date("d/m/Y · H:i:s", strtotime($fila['fecha_hora']));
+                        $camara     = htmlspecialchars($fila['camara'] ?? '-');
+                        $motivo_raw = $fila['motivo'] ?? 'NO_AUTORIZADO';
+                        $matricula  = htmlspecialchars($fila['matricula']);
 
                         switch ($motivo_raw) {
                             case 'ENTRADA_DUPLICADA':
@@ -161,7 +169,7 @@ $hay_filtros = ($filtro_matricula || $filtro_fecha || $filtro_hora || $filtro_mo
                 ?>
                 <tr class="<?php echo $row_class; ?>">
                     <td><?php echo $fecha_hora; ?></td>
-                    <td><strong style="color:var(--color-peligro);"><?php echo $matricula; ?></strong></td>
+                    <td><strong class="matricula-denegada"><?php echo $matricula; ?></strong></td>
                     <td><?php echo $camara; ?></td>
                     <td><?php echo $badge; ?></td>
                     <td><span class="estado-salida">DENEGADO</span></td>
@@ -171,7 +179,7 @@ $hay_filtros = ($filtro_matricula || $filtro_fecha || $filtro_hora || $filtro_mo
                 else:
                 ?>
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:28px; color:#718096;">
+                    <td colspan="5" class="td-vacio">
                         No se han registrado intentos denegados con los filtros seleccionados.
                     </td>
                 </tr>
@@ -180,7 +188,7 @@ $hay_filtros = ($filtro_matricula || $filtro_fecha || $filtro_hora || $filtro_mo
         </table>
     </div>
 
-    <div style="margin-top: 24px;">
+    <div class="seccion-volver">
         <a href="index.php"><button type="button" class="btn-gray btn-gray-mt10">Volver al Panel</button></a>
     </div>
 </div>

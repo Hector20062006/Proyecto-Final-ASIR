@@ -682,3 +682,61 @@ footer {
 /* Filas con fondo tenue por tipo */
 tr.row-duplicado  { background: #fffbeb !important; }
 tr.row-salida-inv { background: #ebf5fb !important; }
+
+/* =========================================
+   TABLA RESUMEN DE INTENTOS
+   ========================================= */
+.tabla-resumen {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 28px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.tabla-resumen th {
+    background-color: var(--color-principal);
+    color: white;
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-resumen td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--color-borde);
+    font-size: 0.95rem;
+}
+
+.tabla-resumen tr:last-child td {
+    border-bottom: none;
+    font-weight: 700;
+    background-color: #f4f7f6;
+}
+
+.tabla-resumen .num-total   { color: #495057; font-weight: 700; }
+.tabla-resumen .num-danger  { color: #e74c3c; font-weight: 700; }
+.tabla-resumen .num-warning { color: #f39c12; font-weight: 700; }
+.tabla-resumen .num-info    { color: #3498db; font-weight: 700; }
+
+/* Matrícula denegada en tabla de resultados */
+.matricula-denegada {
+    color: var(--color-peligro);
+    font-weight: 700;
+}
+
+/* Celda vacía cuando no hay resultados */
+.td-vacio {
+    text-align: center;
+    padding: 28px;
+    color: #718096;
+}
+
+/* Wrapper del botón volver */
+.seccion-volver {
+    margin-top: 24px;
+}
+
