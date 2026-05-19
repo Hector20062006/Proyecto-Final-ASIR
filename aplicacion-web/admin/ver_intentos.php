@@ -72,7 +72,8 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
     <h2>Intentos de Acceso Denegados</h2>
     <p>Registro completo de accesos rechazados: matrículas no autorizadas, vehículos ya dentro intentando entrar de nuevo, y salidas sin entrada previa.</p>
 
-    <!-- Tabla de resumen de totales -->\n    <table class="tabla-resumen">
+    <!-- Tabla de resumen de totales -->
+    <table class="tabla-resumen">
         <thead>
             <tr>
                 <th>Tipo de incidencia</th>
