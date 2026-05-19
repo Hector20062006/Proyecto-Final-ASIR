@@ -17,9 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Usamos NOW() de MySQL para que la base de datos ponga la fecha y hora exacta actual
+    // Usamos la hora de Madrid en el servidor PHP
+    $fecha_hora = date('Y-m-d H:i:s');
     $sql = "INSERT INTO accesos (matricula, fecha_hora, tipo_movimiento) 
-            VALUES ('$matricula', NOW(), '$tipo_movimiento')";
+            VALUES ('$matricula', '$fecha_hora', '$tipo_movimiento')";
 
     require '../header2.php'; // Incluimos el header para que el mensaje de éxito se vea bonito
 

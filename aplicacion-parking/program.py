@@ -115,11 +115,12 @@ def actualizar_plaza(id_plaza, estado):
     try:
         conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
+        fecha_actualizacion = ahora_en_madrid()
         cursor.execute("""
-            INSERT INTO plazas (id_plaza, estado) 
-            VALUES (%s, %s) 
-            ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=NOW()
-        """, (id_plaza, estado, estado))
+            INSERT INTO plazas (id_plaza, estado, ultima_actualizacion) 
+            VALUES (%s, %s, %s) 
+            ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=%s
+        """, (id_plaza, estado, fecha_actualizacion, estado, fecha_actualizacion))
         conn.commit()
         conn.close()
     except mysql.connector.Error as err:
@@ -172,7 +173,8 @@ def registrar_intento_denegado(matricula, origen):
                 camara VARCHAR(50)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """)
-        cursor.execute("INSERT INTO intentos_denegados (matricula, camara) VALUES (%s, %s)", (matricula, origen))
+        fecha_hora = ahora_en_madrid()
+        cursor.execute("INSERT INTO intentos_denegados (matricula, fecha_hora, camara) VALUES (%s, %s, %s)", (matricula, fecha_hora, origen))
         conn.commit()
         conn.close()
     except mysql.connector.Error as err:

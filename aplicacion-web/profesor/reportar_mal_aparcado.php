@@ -66,7 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['matricula'])) {
             $tipo_status = "error";
         } else {
             // 2. Registrar en la base de datos
-            $sql_insert = "INSERT INTO reportes_mal_aparcado (matricula, dni_reportador, motivo) VALUES ('$matricula', '$dni_reportador', '$motivo')";
+            $fecha_hora = date('Y-m-d H:i:s');
+            $sql_insert = "INSERT INTO reportes_mal_aparcado (matricula, dni_reportador, motivo, fecha_hora) VALUES ('$matricula', '$dni_reportador', '$motivo', '$fecha_hora')";
             if (mysqli_query($conexion, $sql_insert)) {
                 
                 // 3. Enviar notificación por Telegram
