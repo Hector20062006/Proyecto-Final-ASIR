@@ -10,9 +10,20 @@ if (!isset($_SESSION['role']) || strtolower(trim($_SESSION['role'])) !== 'admini
 require '../conexion.php';
 require '../header2.php';
 
-// --- MIGRACIÓN AUTOMÁTICA: añadir columna 'motivo' si no existe ---
-$alter_sql = "ALTER TABLE intentos_denegados ADD COLUMN IF NOT EXISTS motivo VARCHAR(50) DEFAULT 'NO_AUTORIZADO'";
-mysqli_query($conexion, $alter_sql);
+// --- MIGRACIÓN AUTOMÁTICA: añadir columna 'motivo' si no existe (compatible MariaDB 10.4) ---
+$col_check = mysqli_query($conexion,
+    "SELECT COUNT(*) AS existe
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME   = 'intentos_denegados'
+       AND COLUMN_NAME  = 'motivo'"
+);
+$col_row = mysqli_fetch_assoc($col_check);
+if ((int)$col_row['existe'] === 0) {
+    mysqli_query($conexion,
+        "ALTER TABLE intentos_denegados ADD COLUMN motivo VARCHAR(50) DEFAULT 'NO_AUTORIZADO'"
+    );
+}
 
 // --- AUTOCREACIÓN DE TABLA SI NO EXISTE ---
 $query_create = "CREATE TABLE IF NOT EXISTS `intentos_denegados` (
