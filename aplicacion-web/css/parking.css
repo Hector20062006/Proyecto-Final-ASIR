@@ -740,3 +740,63 @@ tr.row-salida-inv { background: #ebf5fb !important; }
     margin-top: 24px;
 }
 
+/* =========================================
+   FILAS FILTRABLES EN TABLA RESUMEN
+   ========================================= */
+.fila-filtro {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.fila-filtro:hover {
+    background-color: #eef2ff !important;
+}
+
+.fila-filtro-activa {
+    background-color: #e8f4fd !important;
+    font-weight: 600;
+}
+
+.enlace-filtro-fila {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+}
+
+.enlace-filtro-fila:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.btn-filtro-rapido {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background-color: #e8f0fe;
+    color: var(--color-secundario);
+    text-decoration: none;
+    border: 1px solid #c5d5f5;
+    transition: background-color 0.15s;
+}
+
+.btn-filtro-rapido:hover {
+    background-color: var(--color-secundario);
+    color: white;
+    text-decoration: none;
+}
+
+.filtro-activo-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+
