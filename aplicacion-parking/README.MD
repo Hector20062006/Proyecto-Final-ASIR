@@ -1,5 +1,7 @@
 # 🛠️ Documentación Técnica: Módulo de Control de Parking (Python & Hardware)
 
+> **Actualización:** El módulo Python central registra los logs y los accesos a MySQL usando la zona horaria `Europe/Madrid`, de forma que las horas mostradas se correspondan con Madrid.
+
 Esta carpeta constituye el **núcleo de control de hardware y visión artificial** del sistema de parking automatizado. Almacena tanto el software central escrito en Python (`program.py`) que se ejecuta en la Raspberry Pi, como los diferentes firmwares de Arduino (`.ino`) y los scripts de automatización del despliegue.
 
 ---

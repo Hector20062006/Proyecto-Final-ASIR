@@ -1,5 +1,7 @@
 # Dockerfile Web (PHP + Apache)
 
+> **Actualización:** La imagen web ahora se despliega con la configuración del servidor PHP alineada a la hora de Madrid para los registros de acceso.
+
 Este directorio contiene el `Dockerfile` utilizado para construir la imagen del servidor web de la aplicación.
 
 ## ¿Qué hace este contenedor?

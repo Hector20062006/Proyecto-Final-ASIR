@@ -1,5 +1,7 @@
 # Dockerfile Certbot (Let's Encrypt + Cloudflare DNS)
 
+> **Actualización:** El sistema de certificación SSL forma parte del despliegue general que ahora mantiene la hora de Madrid para los registros de acceso y auditoría.
+
 Este directorio contiene el `Dockerfile` y el script de arranque (`entrypoint.sh`) utilizados para construir la imagen del gestor de certificados SSL de la aplicación.
 
 ## ¿Qué hace este contenedor?

@@ -10,6 +10,8 @@
 ![](https://img.shields.io/github/repo-size/Hector20062006/Proyecto-Final-ASIR?color=86dbce&label=SIZE&logo=protondrive&style=for-the-badge&logoColor=D9E0EE&labelColor=1E202B)
 </div>
 
+> **Actualización:** Todos los logs del sistema y los registros de acceso ahora se sincronizan con la zona horaria `Europe/Madrid`, asegurando que las marcas de tiempo reflejen la hora y el día correctos de Madrid.
+
 <div align="center">
     <h2> descripción general </h2>
     <h3></h3>

@@ -1,5 +1,7 @@
 # Dockerfile Python (OCR & Hardware)
 
+> **Actualización:** El contenedor Python gestiona ahora los logs y las marcas de tiempo con la zona horaria `Europe/Madrid` para mantener las referencias temporales correctas.
+
 Este directorio contiene el `Dockerfile` encargado de crear el entorno para ejecutar el núcleo de detección de matrículas.
 
 ## ¿Qué hace este contenedor?
