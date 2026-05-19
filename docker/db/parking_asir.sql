@@ -190,6 +190,7 @@ CREATE TABLE IF NOT EXISTS `intentos_denegados` (
   `matricula` varchar(10) NOT NULL,
   `fecha_hora` datetime DEFAULT current_timestamp(),
   `camara` varchar(50) DEFAULT NULL,
+  `motivo` varchar(50) DEFAULT 'NO_AUTORIZADO' COMMENT 'NO_AUTORIZADO | ENTRADA_DUPLICADA | SALIDA_SIN_ENTRADA',
   PRIMARY KEY (`id_intento`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
