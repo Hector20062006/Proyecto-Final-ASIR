@@ -11,10 +11,24 @@ import numpy as np
 import threading
 import os
 
+try:
+    from zoneinfo import ZoneInfo
+    MADRID_TZ = ZoneInfo("Europe/Madrid")
+except ImportError:
+    try:
+        import pytz
+        MADRID_TZ = pytz.timezone("Europe/Madrid")
+    except ImportError:
+        MADRID_TZ = datetime.timezone(datetime.timedelta(hours=1))
+
 # --- Funciones de Utilidad Iniciales ---
 
+def ahora_en_madrid():
+    return datetime.datetime.now(MADRID_TZ)
+
+
 def log_mensaje(origen, mensaje):
-    ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ahora = ahora_en_madrid().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{ahora}] [{origen}] {mensaje}", flush=True)
 
 def auto_detectar_puerto_arduino():
@@ -135,9 +149,14 @@ def registrar_acceso(matricula, origen):
         conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
         movimiento = "ENTRADA" if "0" in origen else "SALIDA"
-        cursor.execute("INSERT INTO accesos (matricula, tipo_movimiento) VALUES (%s, %s)", (matricula, movimiento))
+        fecha_hora = ahora_en_madrid()
+        cursor.execute(
+            "INSERT INTO accesos (matricula, tipo_movimiento, fecha_hora) VALUES (%s, %s, %s)",
+            (matricula, movimiento, fecha_hora)
+        )
         conn.commit()
         conn.close()
+        log_mensaje("Acceso", f"{movimiento} registrado para {matricula}.")
     except mysql.connector.Error as err:
         log_mensaje("Base de Datos", f"Error al registrar acceso: {err}")
 
