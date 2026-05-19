@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt_check->num_rows > 0) {
         // El vehículo ya está dentro
         if ($tipo_movimiento !== 'SALIDA') {
-            $alerta_1 = "⚠️ El vehículo ya está dentro del parking. Se registrará su salida.";
+            $alerta_1 = "El vehículo ya está dentro del parking. Se registrará su salida.";
             $tipo_movimiento = "SALIDA";
         }
     } else {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt_check_salida->num_rows == 0) {
             // El vehículo no está ni dentro ni fuera, no registrar entrada
-            $alerta_1 = "❌ El vehículo no está registrado. No puede entrar.";
+            $alerta_1 = "El vehículo no está registrado. No puede entrar.";
             // Corregir: registrar una salida por error para limpiar
             $tipo_movimiento = "SALIDA";
         } else {

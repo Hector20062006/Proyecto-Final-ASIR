@@ -33,6 +33,9 @@ if (!empty($filtro_matricula)) {
 if (!empty($filtro_fecha)) {
     $where_clauses[] = "DATE(fecha_hora) = '$filtro_fecha'";
 }
+if (!empty($filtro_hora)) {
+    $where_clauses[] = "TIME(fecha_hora) = '$filtro_hora'";
+}
 
 $where_sql = "";
 if (count($where_clauses) > 0) {
@@ -50,18 +53,22 @@ $resultado = mysqli_query($conexion, $sql);
 
     <!-- Formulario de Filtros -->
     <div class="filtro-form">
-        <form action="" method="GET" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
-            <div style="flex: 1; min-width: 150px;">
-                <label style="display:block; font-weight:bold; margin-bottom:5px; font-size:14px;">Matrícula:</label>
-                <input type="text" name="matricula" value="<?php echo htmlspecialchars($filtro_matricula); ?>" placeholder="Ej: 1234ABC" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+        <form action="" method="GET" class="filtro-form">
+            <div class="filtro-input">
+                <label for="matricula" class="filtro-label">Matrícula:</label>
+                <input type="text" name="matricula" id="matricula" value="<?php echo htmlspecialchars($filtro_matricula); ?>" placeholder="Ej: 1234ABC" class="filtro-input">
             </div>
-            <div style="flex: 1; min-width: 150px;">
-                <label style="display:block; font-weight:bold; margin-bottom:5px; font-size:14px;">Fecha:</label>
-                <input type="date" name="fecha" value="<?php echo htmlspecialchars($filtro_fecha); ?>" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+            <div class="filtro-input">
+                <label for="fecha" class="filtro-label">Fecha:</label>
+                <input type="date" name="fecha" id="fecha" value="<?php echo htmlspecialchars($filtro_fecha); ?>" class="filtro-input">
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button type="submit" class="btn-blue" style="padding: 9px 20px;">Filtrar</button>
-                <a href="ver_intentos.php" class="btn-gray" style="padding: 9px 20px; text-decoration:none; display:inline-block; font-size:14px; text-align:center;">Limpiar</a>
+            <div class="filtro-input">
+                <label for="hora" class="filtro-label">Hora:</label>
+                <input type="time" name="hora" id="hora" value="<?php echo isset($_GET['hora']) ? htmlspecialchars($_GET['hora']) : ''; ?>" class="filtro-input">
+            </div>
+            <div class="filtro-buttons">
+                <button type="submit" class="btn-blue">Filtrar</button>
+                <a href="ver_intentos.php" class="btn-gray">Limpiar</a>
             </div>
         </form>
     </div>
@@ -70,7 +77,8 @@ $resultado = mysqli_query($conexion, $sql);
         <table>
             <thead>
                 <tr>
-                    <th>Fecha y Hora</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
                     <th>Matrícula Detectada</th>
                     <th>Cámara / Origen</th>
                     <th>Estado</th>
@@ -80,18 +88,20 @@ $resultado = mysqli_query($conexion, $sql);
                 <?php
                 if ($resultado && mysqli_num_rows($resultado) > 0) {
                     while ($fila = mysqli_fetch_assoc($resultado)) {
-                        $fecha = date("d/m/Y H:i:s", strtotime($fila['fecha_hora']));
+                        $fecha = date("d/m/Y", strtotime($fila['fecha_hora']));
+                        $hora = date("H:i:s", strtotime($fila['fecha_hora']));
                         $camara = htmlspecialchars($fila['camara']);
-                        
+
                         echo "<tr>
-                                <td>$fecha</td>
-                                <td><strong style='color:var(--color-peligro);'>{$fila['matricula']}</strong></td>
-                                <td>$camara</td>
-                                <td><span class='estado-salida'>DENEGADO</span></td>
-                              </tr>";
+                          <td>$fecha</td>
+                          <td>$hora</td>
+                          <td><strong style='color:var(--color-peligro);'>{$fila['matricula']}</strong></td>
+                          <td>$camara</td>
+                          <td><span class='estado-salida'>DENEGADO</span></td>
+                        </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='4' style='text-align:center;'>No se han registrado intentos no autorizados.</td></tr>";
+                    echo "<tr><td colspan='5' style='text-align:center;'>No se han registrado intentos no autorizados.</td></tr>";
                 }
                 ?>
             </tbody>
