@@ -69,9 +69,9 @@ $filtro = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
                     <td>{$registro[4]}</td>
                     <td>{$rol}</td>
                     <td>
-                        <a href='actualizar2_usuario.php?dni={$registro[0]}'>
-                           <button type='button' class='btn-green'>✏️ Editar</button>
-                        </a>
+                         <a href='actualizar2_usuario.php?dni={$registro[0]}'>
+                           <button type='button' class='btn-green btn-icon' title='Editar usuario'>✏️</button>
+                         </a>
                     </td>
                   </tr>";
         }

@@ -71,9 +71,9 @@ $filtro = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
                     <td>{$registro[4]}</td>
                     <td>{$rol}</td>
                     <td>
-                        <a href='borrar2_usuario.php?dni={$registro[0]}' onclick='return confirm(\"¿Estás seguro de borrar a {$registro[1]}?\");'>
-                           <button type='button' class='btn-red'>🗑️ Borrar</button>
-                        </a>
+                         <a href='borrar2_usuario.php?dni={$registro[0]}' onclick='return confirm(\"¿Estás seguro de borrar a {$registro[1]}?\");'>
+                           <button type='button' class='btn-red btn-icon' title='Borrar usuario'>🗑️</button>
+                         </a>
                     </td>
                   </tr>";
         }
