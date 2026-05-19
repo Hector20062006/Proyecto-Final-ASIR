@@ -1,4 +1,5 @@
 # Seguridad
+.gitignore
 .env
 
 # Docker
