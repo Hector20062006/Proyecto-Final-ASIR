@@ -1,6 +1,6 @@
 # 🌐 Documentación Técnica: Aplicación Web del Parking Iliberis (PHP & RBAC)
 
-> **Actualización:** La aplicación web ahora opera con la hora de Madrid en los registros de acceso y la sesión MySQL se alinea con `Europe/Madrid`.
+Este módulo gestiona los registros de acceso con la hora de Madrid y alinea la sesión MySQL con `Europe/Madrid`.
 
 Este módulo constituye la **capa de presentación, administración y lógica de negocio (Frontend/Backend)** del sistema del parking automatizado. Ofrece un portal web responsive estructurado bajo un modelo de control de accesos basado en roles (RBAC) y actúa como la pasarela receptora (API) para el hardware y el sistema de visión artificial.
 

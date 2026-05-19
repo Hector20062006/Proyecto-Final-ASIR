@@ -1,8 +1,6 @@
 # Dockerfile Web (PHP + Apache)
 
-> **Actualización:** La imagen web ahora se despliega con la configuración del servidor PHP alineada a la hora de Madrid para los registros de acceso.
-
-Este directorio contiene el `Dockerfile` utilizado para construir la imagen del servidor web de la aplicación.
+Este directorio contiene el `Dockerfile` utilizado para construir la imagen del servidor web de la aplicación. El contenedor web está preparado para que el servidor PHP utilice la hora de Madrid en los registros de acceso.
 
 ## ¿Qué hace este contenedor?
 1. **Imagen Base:** Utiliza `php:8.2-apache`, que es un servidor web Apache preconfigurado con PHP 8.2.

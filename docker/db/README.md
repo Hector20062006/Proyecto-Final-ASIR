@@ -1,6 +1,6 @@
 # Configuración de Base de Datos (MySQL)
 
-> **Actualización:** Las tablas de acceso e intentos ahora reciben marcas de tiempo explicitamente basadas en la hora de Madrid, y la sesión MySQL se puede ajustar a esa zona horaria.
+Las tablas de acceso e intentos reciben marcas de tiempo explícitamente basadas en la hora de Madrid, y la sesión MySQL puede ajustarse a ese huso horario.
 
 Este directorio contiene el script de inicialización SQL (`parking_asir.sql`) utilizado para estructurar y rellenar la base de datos MySQL al desplegar el entorno Docker.
 
