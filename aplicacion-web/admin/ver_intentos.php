@@ -72,8 +72,7 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
     <h2>Intentos de Acceso Denegados</h2>
     <p>Registro completo de accesos rechazados: matrículas no autorizadas, vehículos ya dentro intentando entrar de nuevo, y salidas sin entrada previa.</p>
 
-    <!-- Tabla de resumen de totales (cada fila filtra al hacer clic) -->
-    <table class="tabla-resumen">
+    <!-- Tabla de resumen de totales -->\n    <table class="tabla-resumen">
         <thead>
             <tr>
                 <th>Tipo de incidencia</th>
@@ -81,24 +80,25 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
             </tr>
         </thead>
         <tbody>
-            <tr class="fila-filtro <?php echo $filtro_motivo === 'NO_AUTORIZADO' ? 'fila-filtro-activa' : ''; ?>">
-                <td><a href="ver_intentos.php?motivo=NO_AUTORIZADO" class="enlace-filtro-fila"><span class="badge-no-auth">No autorizado</span> &nbsp;Matrícula no registrada en el sistema</a></td>
+            <tr>
+                <td><span class="badge-no-auth">No autorizado</span></td>
                 <td><span class="num-danger"><?php echo (int)$no_autorizados; ?></span></td>
             </tr>
-            <tr class="fila-filtro <?php echo $filtro_motivo === 'ENTRADA_DUPLICADA' ? 'fila-filtro-activa' : ''; ?>">
-                <td><a href="ver_intentos.php?motivo=ENTRADA_DUPLICADA" class="enlace-filtro-fila"><span class="badge-duplicado">Entrada duplicada</span> &nbsp;Vehículo ya dentro intentando volver a entrar</a></td>
+            <tr>
+                <td><span class="badge-duplicado">Entrada duplicada</span></td>
                 <td><span class="num-warning"><?php echo (int)$duplicados; ?></span></td>
             </tr>
-            <tr class="fila-filtro <?php echo $filtro_motivo === 'SALIDA_SIN_ENTRADA' ? 'fila-filtro-activa' : ''; ?>">
-                <td><a href="ver_intentos.php?motivo=SALIDA_SIN_ENTRADA" class="enlace-filtro-fila"><span class="badge-salida-inv">Salida sin entrada</span> &nbsp;Vehículo sin entrada previa registrada</a></td>
+            <tr>
+                <td><span class="badge-salida-inv">Salida sin entrada</span></td>
                 <td><span class="num-info"><?php echo (int)$salidas_inv; ?></span></td>
             </tr>
             <tr>
-                <td><a href="ver_intentos.php" class="enlace-filtro-fila">Total de intentos denegados</a></td>
+                <td>Total de intentos denegados</td>
                 <td><span class="num-total"><?php echo (int)$total; ?></span></td>
             </tr>
         </tbody>
     </table>
+
 
     <!-- Filtros -->
     <form method="GET" action="ver_intentos.php" class="filtro-form">
