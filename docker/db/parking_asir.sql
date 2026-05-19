@@ -207,3 +207,18 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- --------------------------------------------------------
+--
+-- Estructura de tabla para la tabla `alertas`
+--
+
+CREATE TABLE IF NOT EXISTS `alertas` (
+  `id_alerta` int(11) NOT NULL AUTO_INCREMENT,
+  `matricula` varchar(10) NOT NULL,
+  `alerta_1` varchar(50) DEFAULT NULL COMMENT 'Vehículo ya dentro',
+  `alerta_2` varchar(50) DEFAULT NULL COMMENT 'Vehículo ya fuera',
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_alerta`),
+  FOREIGN KEY (`matricula`) REFERENCES `vehiculos` (`matricula`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
