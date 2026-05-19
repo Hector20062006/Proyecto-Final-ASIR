@@ -22,7 +22,7 @@ $fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
         
         <div class="form-row">
             <div class="form-group-lg">
-                <label for="usuario" class="form-label">👤 Usuario:</label><br>
+                <label for="usuario" class="form-label">Usuario:</label><br>
                 <select name="usuario" id="usuario" class="form-control">
                     <option value="">-- Todos los usuarios --</option>
                     <?php
@@ -37,21 +37,21 @@ $fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
             </div>
             
             <div class="form-group-md">
-                <label for="fecha_inicio" class="form-label">📅 Desde (Fecha y Hora):</label><br>
+                <label for="fecha_inicio" class="form-label">Desde (Fecha y Hora):</label><br>
                 <input type="datetime-local" name="fecha_inicio" id="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio); ?>" class="form-control">
             </div>
             
             <div class="form-group-md">
-                <label for="fecha_fin" class="form-label">📅 Hasta (Fecha y Hora):</label><br>
+                <label for="fecha_fin" class="form-label">Hasta (Fecha y Hora):</label><br>
                 <input type="datetime-local" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($fecha_fin); ?>" class="form-control">
             </div>
         </div>
         
         <div class="btn-group">
-            <button type="submit" class="btn-blue btn-lg btn-grow">🔍 Aplicar Filtros</button>
+            <button type="submit" class="btn-blue btn-lg btn-grow">Aplicar Filtros</button>
             <?php if ($filtro_usuario !== '' || $fecha_inicio !== '' || $fecha_fin !== ''): ?>
                 <a href="historial_accesos.php" class="link-grow">
-                    <button type="button" class="btn-red btn-lg btn-w100">🗑️ Limpiar</button>
+                    <button type="button" class="btn-red btn-lg btn-w100">Limpiar</button>
                 </a>
             <?php endif; ?>
         </div>

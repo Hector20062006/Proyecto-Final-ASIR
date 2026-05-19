@@ -78,29 +78,24 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
             <tr>
                 <th>Tipo de incidencia</th>
                 <th>Total</th>
-                <th>Filtrar</th>
             </tr>
         </thead>
         <tbody>
             <tr class="fila-filtro <?php echo $filtro_motivo === 'NO_AUTORIZADO' ? 'fila-filtro-activa' : ''; ?>">
                 <td><a href="ver_intentos.php?motivo=NO_AUTORIZADO" class="enlace-filtro-fila"><span class="badge-no-auth">No autorizado</span> &nbsp;Matrícula no registrada en el sistema</a></td>
                 <td><span class="num-danger"><?php echo (int)$no_autorizados; ?></span></td>
-                <td><?php echo $filtro_motivo === 'NO_AUTORIZADO' ? '<span class="filtro-activo-badge">✔ Activo</span>' : '<a href="ver_intentos.php?motivo=NO_AUTORIZADO" class="btn-filtro-rapido">Filtrar</a>'; ?></td>
             </tr>
             <tr class="fila-filtro <?php echo $filtro_motivo === 'ENTRADA_DUPLICADA' ? 'fila-filtro-activa' : ''; ?>">
                 <td><a href="ver_intentos.php?motivo=ENTRADA_DUPLICADA" class="enlace-filtro-fila"><span class="badge-duplicado">Entrada duplicada</span> &nbsp;Vehículo ya dentro intentando volver a entrar</a></td>
                 <td><span class="num-warning"><?php echo (int)$duplicados; ?></span></td>
-                <td><?php echo $filtro_motivo === 'ENTRADA_DUPLICADA' ? '<span class="filtro-activo-badge">✔ Activo</span>' : '<a href="ver_intentos.php?motivo=ENTRADA_DUPLICADA" class="btn-filtro-rapido">Filtrar</a>'; ?></td>
             </tr>
             <tr class="fila-filtro <?php echo $filtro_motivo === 'SALIDA_SIN_ENTRADA' ? 'fila-filtro-activa' : ''; ?>">
                 <td><a href="ver_intentos.php?motivo=SALIDA_SIN_ENTRADA" class="enlace-filtro-fila"><span class="badge-salida-inv">Salida sin entrada</span> &nbsp;Vehículo sin entrada previa registrada</a></td>
                 <td><span class="num-info"><?php echo (int)$salidas_inv; ?></span></td>
-                <td><?php echo $filtro_motivo === 'SALIDA_SIN_ENTRADA' ? '<span class="filtro-activo-badge">✔ Activo</span>' : '<a href="ver_intentos.php?motivo=SALIDA_SIN_ENTRADA" class="btn-filtro-rapido">Filtrar</a>'; ?></td>
             </tr>
             <tr>
                 <td><a href="ver_intentos.php" class="enlace-filtro-fila">Total de intentos denegados</a></td>
                 <td><span class="num-total"><?php echo (int)$total; ?></span></td>
-                <td><?php echo $filtro_motivo ? '<a href="ver_intentos.php" class="btn-filtro-rapido">Ver todos</a>' : ''; ?></td>
             </tr>
         </tbody>
     </table>
@@ -110,14 +105,14 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
 
         <div class="form-row">
             <div class="form-group-md">
-                <label for="matricula" class="form-label">🔍 Matrícula:</label><br>
+                <label for="matricula" class="form-label">Matrícula:</label><br>
                 <input type="text" name="matricula" id="matricula" class="form-control"
                     value="<?php echo htmlspecialchars($filtro_matricula); ?>"
                     placeholder="Ej: 1234ABC">
             </div>
 
             <div class="form-group-md">
-                <label for="motivo" class="form-label">⚠️ Tipo de incidencia:</label><br>
+                <label for="motivo" class="form-label">Tipo de incidencia:</label><br>
                 <select name="motivo" id="motivo" class="form-control">
                     <option value="">-- Todos los tipos --</option>
                     <option value="NO_AUTORIZADO"     <?php echo $filtro_motivo === 'NO_AUTORIZADO'     ? 'selected' : ''; ?>>No autorizado</option>
@@ -127,23 +122,23 @@ $hay_filtros = ($filtro_matricula || $filtro_motivo || $filtro_fecha_inicio || $
             </div>
 
             <div class="form-group-md">
-                <label for="fecha_inicio" class="form-label">📅 Desde (Fecha y Hora):</label><br>
+                <label for="fecha_inicio" class="form-label">Desde (Fecha y Hora):</label><br>
                 <input type="datetime-local" name="fecha_inicio" id="fecha_inicio" class="form-control"
                     value="<?php echo htmlspecialchars($filtro_fecha_inicio); ?>">
             </div>
 
             <div class="form-group-md">
-                <label for="fecha_fin" class="form-label">📅 Hasta (Fecha y Hora):</label><br>
+                <label for="fecha_fin" class="form-label">Hasta (Fecha y Hora):</label><br>
                 <input type="datetime-local" name="fecha_fin" id="fecha_fin" class="form-control"
                     value="<?php echo htmlspecialchars($filtro_fecha_fin); ?>">
             </div>
         </div>
 
         <div class="btn-group">
-            <button type="submit" class="btn-blue btn-lg btn-grow">🔍 Aplicar Filtros</button>
+            <button type="submit" class="btn-blue btn-lg btn-grow">Aplicar Filtros</button>
             <?php if ($hay_filtros): ?>
                 <a href="ver_intentos.php" class="link-grow">
-                    <button type="button" class="btn-red btn-lg btn-w100">🗑️ Limpiar</button>
+                    <button type="button" class="btn-red btn-lg btn-w100">Limpiar</button>
                 </a>
             <?php endif; ?>
         </div>
