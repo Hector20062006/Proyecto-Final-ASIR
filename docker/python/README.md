@@ -1,6 +1,6 @@
 # Dockerfile Python (OCR & Hardware)
 
-Este directorio contiene el `Dockerfile` encargado de crear el entorno para ejecutar el núcleo de detección de matrículas.
+Este directorio contiene el `Dockerfile` encargado de crear el entorno para ejecutar el núcleo de detección de matrículas. El contenedor Python está configurado para que los logs y los accesos se registren con la zona horaria `Europe/Madrid`.
 
 ## ¿Qué hace este contenedor?
 1. **Imagen Base:** Utiliza `python:3.11-slim`, una imagen ligera de Linux con Python preinstalado.

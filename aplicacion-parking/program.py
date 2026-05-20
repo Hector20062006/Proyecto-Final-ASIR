@@ -115,11 +115,12 @@ def actualizar_plaza(id_plaza, estado):
     try:
         conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
+        fecha_actualizacion = ahora_en_madrid()
         cursor.execute("""
-            INSERT INTO plazas (id_plaza, estado) 
-            VALUES (%s, %s) 
-            ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=NOW()
-        """, (id_plaza, estado, estado))
+            INSERT INTO plazas (id_plaza, estado, ultima_actualizacion) 
+            VALUES (%s, %s, %s) 
+            ON DUPLICATE KEY UPDATE estado=%s, ultima_actualizacion=%s
+        """, (id_plaza, estado, fecha_actualizacion, estado, fecha_actualizacion))
         conn.commit()
         conn.close()
     except mysql.connector.Error as err:
@@ -160,21 +161,34 @@ def registrar_acceso(matricula, origen):
     except mysql.connector.Error as err:
         log_mensaje("Base de Datos", f"Error al registrar acceso: {err}")
 
-def registrar_intento_denegado(matricula, origen):
+def registrar_intento_denegado(matricula, origen, motivo="NO_AUTORIZADO"):
     try:
         conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
         cursor = conn.cursor()
+        # Asegurar que la columna 'motivo' existe (migración automática)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS intentos_denegados (
                 id_intento INT AUTO_INCREMENT PRIMARY KEY,
                 matricula VARCHAR(10) NOT NULL,
                 fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
-                camara VARCHAR(50)
+                camara VARCHAR(50),
+                motivo VARCHAR(50) DEFAULT 'NO_AUTORIZADO'
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """)
-        cursor.execute("INSERT INTO intentos_denegados (matricula, camara) VALUES (%s, %s)", (matricula, origen))
+        # Añadir columna motivo si la tabla ya existía sin ella
+        try:
+            cursor.execute("ALTER TABLE intentos_denegados ADD COLUMN motivo VARCHAR(50) DEFAULT 'NO_AUTORIZADO'")
+            conn.commit()
+        except mysql.connector.Error:
+            pass  # La columna ya existe
+        fecha_hora = ahora_en_madrid()
+        cursor.execute(
+            "INSERT INTO intentos_denegados (matricula, fecha_hora, camara, motivo) VALUES (%s, %s, %s, %s)",
+            (matricula, fecha_hora, origen, motivo)
+        )
         conn.commit()
         conn.close()
+        log_mensaje("Base de Datos", f"Intento denegado registrado: {matricula} | Motivo: {motivo}")
     except mysql.connector.Error as err:
         log_mensaje("Base de Datos", f"Error al registrar intento: {err}")
 
@@ -439,12 +453,14 @@ def procesar_matricula(ser, matricula, origen):
     ultimo_movimiento = obtener_ultimo_movimiento(matricula)
 
     if es_entrada and ultimo_movimiento == "ENTRADA":
-        log_mensaje("Estado", f"BLOQUEADO - {matricula} ya está dentro.")
+        log_mensaje("Estado", f"BLOQUEADO - {matricula} ya está dentro (entrada duplicada).")
+        registrar_intento_denegado(matricula, origen, motivo="ENTRADA_DUPLICADA")
         denegar_estado(ser, "Ya en parking", "No puede entrar")
         return
 
     if not es_entrada and ultimo_movimiento != "ENTRADA":
         log_mensaje("Estado", f"BLOQUEADO - {matricula} no figura como dentro.")
+        registrar_intento_denegado(matricula, origen, motivo="SALIDA_SIN_ENTRADA")
         denegar_estado(ser, "No esta dentro", "No puede salir")
         return
 

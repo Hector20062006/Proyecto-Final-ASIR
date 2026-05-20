@@ -10,6 +10,8 @@
 ![](https://img.shields.io/github/repo-size/Hector20062006/Proyecto-Final-ASIR?color=86dbce&label=SIZE&logo=protondrive&style=for-the-badge&logoColor=D9E0EE&labelColor=1E202B)
 </div>
 
+Este sistema registra todos los logs y los accesos usando la zona horaria `Europe/Madrid`, de modo que las marcas de tiempo reflejen la hora y el día reales de Madrid.
+
 <div align="center">
     <h2> descripción general </h2>
     <h3></h3>
@@ -30,7 +32,7 @@ El objetivo principal de este proyecto es integrar conocimientos de administraci
 7. **Reporte de Mal Aparcado Seguro:** Sistema para que los profesores notifiquen vehículos mal estacionados mediante la matrícula, bloqueando el reporte si el coche no se encuentra físicamente registrado dentro del parking.
 8. **Notificaciones en Tiempo Real:** Integración bidireccional con la API de Telegram para enviar alertas automáticas y reportes de incidencias en tiempo real.
 9. **Gestión Administrativa:** Panel de control para que el administrador audite y filtre todas las incidencias reportadas.
-10. **Auditoría de Intentos No Autorizados:** Registro automático de matrículas desconocidas detectadas por el OCR para supervisar posibles intrusiones.
+10. **Auditoría Completa de Intentos Denegados:** Registro automático de tres tipos de incidencias en la tabla `intentos_denegados` con un campo `motivo` diferenciado: matrículas no registradas en el sistema (`NO_AUTORIZADO`), vehículos autorizados que ya están dentro e intentan volver a entrar (`ENTRADA_DUPLICADA`), y vehículos que intentan salir sin tener una entrada registrada (`SALIDA_SIN_ENTRADA`). Visualizable en el panel de administración con tarjetas de resumen, badges de color y filtros avanzados.
 11. **Gestión de Ocupación en Tiempo Real:** Cálculo automático de plazas libres y ocupadas basado en el flujo de entradas y salidas registrado en la base de datos.
 12. **Sensores Físicos de Aparcamiento:** Integración de microinterruptores que detectan en tiempo real si un vehículo está bien o mal aparcado en su plaza.
 13. **Monitorización de Tiempos y Alertas:** Un temporizador interno vigila que el vehículo aparque correctamente en los 5 minutos posteriores a su entrada. Asimismo, si un vehículo aparcado deja su plaza (el sensor se pone verde) pero no registra su salida del recinto en un tiempo de gracia de 1 minuto, genera una alerta autónoma por Telegram.
@@ -146,7 +148,8 @@ Una de las características clave de este proyecto de fin de ciclo es su resilie
 *   **Validación DNS-01 (Sin Puertos Abiertos):** Al usar la API de Cloudflare para validar la propiedad del dominio, **no es necesario abrir el puerto 80 en tu router**, superando cualquier restricción de red de grado escolar o IPs locales de la Raspberry Pi.
 *   **Gestión Dinámica de Hardware:** El script Python detecta dinámicamente el puerto USB asignado al Arduino. Ya no se rompe el despliegue al cambiar el hardware de puerto USB.
 *   **Alertas Autónomas Inteligentes (Telegram):** El sistema notifica de forma autónoma al canal de Telegram si un vehículo excede los 5 minutos sin aparcar tras ingresar, o si abandona una plaza física sin registrar su salida del recinto en una ventana de gracia de 1 minuto, previniendo falsas alertas.
-*   **Auto-inicialización de Base de Datos:** Tanto el backend web como el módulo Python crean las tablas necesarias al vuelo si no existen.
+*   **Auto-inicialización de Base de Datos:** Tanto el backend web como el módulo Python crean las tablas necesarias al vuelo si no existen, incluyendo migraciones automáticas de columnas (compatibles con MariaDB 10.4) para no romper instalaciones existentes.
+*   **CSS Centralizado:** Todos los estilos de la aplicación web se gestionan desde un único archivo `parking.css`. Ninguna página contiene bloques `<style>` inline, garantizando coherencia visual y mantenimiento sencillo.
 *   **Despliegue Continuo (CI/CD):** Actualizaciones integradas mediante GitHub Actions para una entrega de software robusta.
 
 ---

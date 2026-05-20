@@ -1,5 +1,7 @@
 # 🛠️ Documentación Técnica: Módulo de Control de Parking (Python & Hardware)
 
+Este módulo Python central registra los logs y los accesos a MySQL usando la zona horaria `Europe/Madrid`, de forma que las horas mostradas se correspondan con Madrid.
+
 Esta carpeta constituye el **núcleo de control de hardware y visión artificial** del sistema de parking automatizado. Almacena tanto el software central escrito en Python (`program.py`) que se ejecuta en la Raspberry Pi, como los diferentes firmwares de Arduino (`.ino`) y los scripts de automatización del despliegue.
 
 ---
@@ -57,8 +59,9 @@ El sistema consulta la base de datos MySQL antes de permitir cualquier movimient
 | Situación | Resultado | Mensaje en LCD | Registro en BD |
 |---|---|---|---|
 | Matrícula autorizada y estado OK | **Acceso permitido** | Secuencia de bienvenida/salida (ver Tabla de Pasos) | Registro `ENTRADA` / `SALIDA` en tabla `accesos` |
-| Matrícula autorizada pero estado mal | **Bloqueado (Anti-Passback)** | `Acceso denegado` → `Ya en parking` (si intenta entrar estando dentro) o `No esta dentro` (si intenta salir sin entrar) | Sin cambios en BD (Solo registro en Logs) |
-| **Matrícula NO autorizada** | **DENEGADO** | `Matricula NO` → `Acceso denegado` → `Matricula no valida` | Registro con cámara y fecha en `intentos_denegados` |
+| Matrícula autorizada pero ya dentro (intenta entrar) | **Bloqueado (Anti-Passback)** | `Acceso denegado` → `Ya en parking` | Registro en `intentos_denegados` con `motivo = ENTRADA_DUPLICADA` |
+| Matrícula autorizada pero no dentro (intenta salir) | **Bloqueado (Anti-Passback)** | `Acceso denegado` → `No esta dentro` | Registro en `intentos_denegados` con `motivo = SALIDA_SIN_ENTRADA` |
+| **Matrícula NO autorizada** | **DENEGADO** | `Matricula NO` → `Acceso denegado` → `Matricula no valida` | Registro en `intentos_denegados` con `motivo = NO_AUTORIZADO` |
 
 ### 5. 🚨 Sensores de Plazas y Monitorización de Tiempos
 El sistema monitoriza en tiempo real el estado físico de los espacios mediante dos alarmas inteligentes que notifican directamente a Telegram:
@@ -168,3 +171,19 @@ pip install opencv-python pytesseract pyserial mysql-connector-python numpy
 python program.py
 ```
 *(El script detectará automáticamente los puertos COM si programas en Windows o /dev/tty si lo ejecutas sobre Linux, conectándose a la base de datos mediante las variables configuradas en tu entorno local).*
+
+---
+
+## 📋 Tabla de Campos de `intentos_denegados`
+
+El sistema registra todos los accesos denegados, incluyendo los anti-passback, en la tabla `intentos_denegados` con los siguientes campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id_intento` | `INT AUTO_INCREMENT` | Identificador único del intento |
+| `matricula` | `VARCHAR(10)` | Matrícula detectada por la cámara |
+| `fecha_hora` | `DATETIME` | Marca de tiempo del intento (hora de Madrid) |
+| `camara` | `VARCHAR(50)` | Cámara que detectó la matrícula (`Cámara 0` / `Cámara 2`) |
+| `motivo` | `VARCHAR(50)` | Motivo del rechazo: `NO_AUTORIZADO`, `ENTRADA_DUPLICADA` o `SALIDA_SIN_ENTRADA` |
+
+> La función `registrar_intento_denegado(matricula, origen, motivo)` aplica automáticamente una migración `ALTER TABLE` si la columna `motivo` no existe en una instalación previa, garantizando compatibilidad hacia atrás sin intervención manual.

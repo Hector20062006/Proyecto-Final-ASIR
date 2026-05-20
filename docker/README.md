@@ -1,5 +1,7 @@
 # 🛠️ Documentación Técnica: Docker y Orquestación
 
+El despliegue sincroniza los servicios de Python y web para usar la hora de Madrid en los registros y las marcas de tiempo de acceso.
+
 Este directorio centraliza la infraestructura de contenedores y la configuración de despliegue modular del **Sistema de Automatización de Parking**. A través de **Docker** y **Docker Compose**, el proyecto se divide en 4 microservicios especializados que colaboran para ofrecer un entorno seguro, aislado y altamente disponible.
 
 ---

@@ -1,5 +1,7 @@
 # 🌐 Documentación Técnica: Aplicación Web del Parking Iliberis (PHP & RBAC)
 
+Este módulo gestiona los registros de acceso con la hora de Madrid y alinea la sesión MySQL con `Europe/Madrid`.
+
 Este módulo constituye la **capa de presentación, administración y lógica de negocio (Frontend/Backend)** del sistema del parking automatizado. Ofrece un portal web responsive estructurado bajo un modelo de control de accesos basado en roles (RBAC) y actúa como la pasarela receptora (API) para el hardware y el sistema de visión artificial.
 
 ---
@@ -33,9 +35,11 @@ Reservado exclusivamente para usuarios con rol `administrador`. Da acceso a las 
 *   **`actualizar3_usuario.php`**: Procesa la actualización de los datos del usuario y del vehículo utilizando transacciones SQL consistentes.
 *   **`historial_accesos.php`**: Panel de auditoría de seguridad. Lista todas las entradas y salidas de vehículos registradas en el parking, mostrando marcas de tiempo precisas y la dirección del flujo de acceso.
 *   **`ver_incidencias.php`**: Listado de coches reportados por mal aparcamiento. Permite filtrar dinámicamente por matrícula, propietario o fecha, facilitando la supervisión de infractores.
-*   **`ver_intentos.php`**: Monitor de intrusos. Muestra una tabla con todas las matrículas capturadas por las cámaras que no constan en la base de datos de vehículos autorizados, identificando vehículos no registrados o errores en el OCR.
+*   **`ver_intentos.php`**: Panel de auditoría de accesos denegados. Clasifica y visualiza tres tipos de incidencias mediante badges de color: matrículas no autorizadas (`NO_AUTORIZADO`), vehículos autorizados que ya están dentro e intentan entrar de nuevo (`ENTRADA_DUPLICADA`) y vehículos que intentan salir sin tener entrada registrada (`SALIDA_SIN_ENTRADA`). Incluye tarjetas de resumen con contadores por tipo, filtros por matrícula, tipo de incidencia, fecha y hora, y filas con color de fondo diferenciado según la gravedad.
 *   **`control_barrera.php`**: Interfaz de accionamiento manual. Permite al administrador forzar y simular movimientos seleccionando vehículos desde un buscador de autocompletado en caliente (HTML5 `<datalist>` conectado a la base de datos).
 *   **`registrar_acceso.php`**: Procesa la acción manual e inserta registros de `ENTRADA` o `SALIDA` en MySQL de forma inmediata.
+
+> **Nota de diseño:** Todos los estilos visuales del panel de administración están centralizados en `../css/parking.css`. Ningún archivo PHP del panel contiene bloques `<style>` inline, facilitando el mantenimiento y la coherencia visual.
 
 ---
 

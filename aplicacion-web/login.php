@@ -85,7 +85,7 @@ require 'header.php';
         <p style="text-align: left; font-weight: bold; margin-bottom: 5px;">Contraseña:</p>
         <input type="password" name="password" required style="width: 100%; padding: 10px; margin-bottom: 25px; border: 1px solid #ccc; border-radius: 4px;">
         
-        <button type="submit" style="width: 100%; padding: 12px; font-size: 16px;">🔑 Entrar al Sistema</button>
+        <button type="submit" style="width: 100%; padding: 12px; font-size: 16px;"> Entrar al Sistema</button>
     </form>
 </div>
 

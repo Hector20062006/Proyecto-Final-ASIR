@@ -24,9 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // 4. Guardamos en la base de datos (NOW() pone la hora exacta automáticamente)
+    // 4. Guardamos en la base de datos usando hora local de Madrid
+    $fecha_hora = date('Y-m-d H:i:s');
     $sql = "INSERT INTO accesos (matricula, fecha_hora, tipo_movimiento) 
-            VALUES ('$matricula', NOW(), '$tipo_movimiento')";
+            VALUES ('$matricula', '$fecha_hora', '$tipo_movimiento')";
 
     if (mysqli_query($conexion, $sql)) {
         // Le devolvemos un "OK" a la cámara de tu compañero para que sepa que ha funcionado

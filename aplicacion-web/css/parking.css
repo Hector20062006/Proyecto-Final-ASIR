@@ -519,3 +519,284 @@ footer {
     color: #4a5568;
     text-decoration: underline;
 }
+
+/* =========================================
+   BOTÓN SOLO EMOJI (icono)
+   ========================================= */
+.btn-icon {
+    padding: 8px 12px;
+    font-size: 18px;
+    line-height: 1;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* =========================================
+   FORMULARIO NUEVA ALTA DE USUARIO
+   ========================================= */
+.form-nueva-alta {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--color-borde);
+}
+
+/* =========================================
+   FILTROS INTENTOS DENEGADOS (mejorado)
+   ========================================= */
+.filtro-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    align-items: end;
+    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    border: 1px solid #d0d9f0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(52,73,235,0.06);
+}
+
+.filtro-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filtro-field label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.filtro-field input,
+.filtro-field select {
+    padding: 9px 12px;
+    border: 1.5px solid #c8d3ea;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #fff;
+    color: #2d3748;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.filtro-field input:focus,
+.filtro-field select:focus {
+    outline: none;
+    border-color: var(--color-secundario);
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+}
+
+.filtro-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+/* =========================================
+   TARJETAS DE ESTADÍSTICAS (Intentos)
+   ========================================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+    border-left: 5px solid transparent;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.stat-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.stat-lbl {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-total   { border-color: #718096; }
+.stat-total   .stat-num { color: #495057; }
+.stat-danger  { border-color: #e74c3c; }
+.stat-danger  .stat-num { color: #e74c3c; }
+.stat-warning { border-color: #f39c12; }
+.stat-warning .stat-num { color: #f39c12; }
+.stat-info    { border-color: #3498db; }
+.stat-info    .stat-num { color: #3498db; }
+
+/* =========================================
+   BADGES DE MOTIVO (Intentos denegados)
+   ========================================= */
+.badge-no-auth {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: #fde8e8;
+    color: #c0392b;
+    letter-spacing: 0.3px;
+}
+
+.badge-duplicado {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-salida-inv {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Filas con fondo tenue por tipo */
+tr.row-duplicado  { background: #fffbeb !important; }
+tr.row-salida-inv { background: #ebf5fb !important; }
+
+/* =========================================
+   TABLA RESUMEN DE INTENTOS
+   ========================================= */
+.tabla-resumen {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 28px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.tabla-resumen th {
+    background-color: var(--color-principal);
+    color: white;
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-resumen td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--color-borde);
+    font-size: 0.95rem;
+}
+
+.tabla-resumen tr:last-child td {
+    border-bottom: none;
+    font-weight: 700;
+    background-color: #f4f7f6;
+}
+
+.tabla-resumen .num-total   { color: #495057; font-weight: 700; }
+.tabla-resumen .num-danger  { color: #e74c3c; font-weight: 700; }
+.tabla-resumen .num-warning { color: #f39c12; font-weight: 700; }
+.tabla-resumen .num-info    { color: #3498db; font-weight: 700; }
+
+/* Matrícula denegada en tabla de resultados */
+.matricula-denegada {
+    color: var(--color-peligro);
+    font-weight: 700;
+}
+
+/* Celda vacía cuando no hay resultados */
+.td-vacio {
+    text-align: center;
+    padding: 28px;
+    color: #718096;
+}
+
+/* Wrapper del botón volver */
+.seccion-volver {
+    margin-top: 24px;
+}
+
+/* =========================================
+   FILAS FILTRABLES EN TABLA RESUMEN
+   ========================================= */
+.fila-filtro {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.fila-filtro:hover {
+    background-color: #eef2ff !important;
+}
+
+.fila-filtro-activa {
+    background-color: #e8f4fd !important;
+    font-weight: 600;
+}
+
+.enlace-filtro-fila {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+}
+
+.enlace-filtro-fila:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.btn-filtro-rapido {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background-color: #e8f0fe;
+    color: var(--color-secundario);
+    text-decoration: none;
+    border: 1px solid #c5d5f5;
+    transition: background-color 0.15s;
+}
+
+.btn-filtro-rapido:hover {
+    background-color: var(--color-secundario);
+    color: white;
+    text-decoration: none;
+}
+
+.filtro-activo-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+

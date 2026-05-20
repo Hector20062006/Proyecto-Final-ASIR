@@ -2,6 +2,8 @@
 
 Este directorio aloja la configuración de **Integración y Despliegue Continuo (CI/CD)** para el Sistema de Automatización de Parking. Mediante GitHub Actions y un ejecutor local (**self-hosted runner**) instalado en la Raspberry Pi, el sistema se despliega y actualiza de manera completamente autónoma ante cada cambio confirmado en la rama `main`.
 
+El pipeline también respalda la configuración de tiempo de Madrid para que los logs y las marcas de tiempo del sistema sean coherentes durante el despliegue.
+
 ---
 
 ## 🔄 Flujo de Trabajo del Despliegue (`deploy.yml`)

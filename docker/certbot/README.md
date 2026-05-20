@@ -1,6 +1,6 @@
 # Dockerfile Certbot (Let's Encrypt + Cloudflare DNS)
 
-Este directorio contiene el `Dockerfile` y el script de arranque (`entrypoint.sh`) utilizados para construir la imagen del gestor de certificados SSL de la aplicación.
+Este directorio contiene el `Dockerfile` y el script de arranque (`entrypoint.sh`) utilizados para construir la imagen del gestor de certificados SSL de la aplicación. Forma parte del despliegue general que mantiene la hora de Madrid en los registros de acceso y auditoría.
 
 ## ¿Qué hace este contenedor?
 1. **Imagen Base:** Utiliza la imagen oficial `certbot/dns-cloudflare:latest`, que incluye Certbot y el plugin necesario para realizar la validación de propiedad del dominio mediante la API de Cloudflare.

@@ -16,7 +16,7 @@ $filtro = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
     <h2>Añadir Nuevo Usuario</h2>
     <p>Rellena los datos para crear un nuevo usuario. Puedes consultar abajo si ya está registrado.</p>
     
-    <form action="guardar_usuario.php" method="POST" style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid var(--color-borde);">
+    <form action="guardar_usuario.php" method="POST" class="form-nueva-alta">
         
         <h3>Datos Personales</h3>
         <div class="form-row">
@@ -74,7 +74,7 @@ $filtro = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
 
         <br>
         <div class="btn-group">
-            <button type="submit" class="btn-green btn-lg btn-grow">💾 Guardar Usuario</button>
+            <button type="submit" class="btn-green btn-lg btn-grow">Guardar Usuario</button>
             <a href="index.php" class="link-grow"><button type="button" class="btn-gray btn-lg btn-w100">Cancelar</button></a>
         </div>
     </form>
