@@ -55,7 +55,7 @@ DB_NAME = os.environ.get("DB_NAME", "parking_ASIR")
 # Comunicacion Serie con Arduino
 PUERTO = auto_detectar_puerto_arduino()
 BAUDIOS = 9600
-CERRADA = 200
+CERRADA = 175
 ABIERTA = 85
 
 # Regiones de Interes (ROIs) para Camaras
