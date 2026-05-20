@@ -153,4 +153,4 @@ Una de las características clave de este proyecto de fin de ciclo es su resilie
 *   **Despliegue Continuo (CI/CD):** Actualizaciones integradas mediante GitHub Actions para una entrega de software robusta.
 
 ---
-*Autores: Imad y Hector*
+*Autores: Imad Chakkour y Hector Ramírez*
